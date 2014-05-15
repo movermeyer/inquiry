@@ -18,10 +18,10 @@ def json_defaults(obj):
 
 
 class FigureResult(object):
-    __slots__ = ("inquiry", "_query", "period", "_results", "_speed")
+    __slots__ = ("navigator", "_query", "period", "_results", "_speed")
 
-    def __init__(self, inquiry, query, period):
-        self.inquiry = inquiry
+    def __init__(self, navigator, query, period):
+        self.navigator = navigator
         self._query = query
         self.period = period
         self._results = False
@@ -31,7 +31,7 @@ class FigureResult(object):
     def results(self):
         if self._results is False:
             start = time()
-            self._results = self.inquiry.query(self._query.replace('__into__', ''))
+            self._results = self.navigator.query(self._query.replace('__into__', ''))
             self._speed = (time() - start) * 1000
         return self._results
 
@@ -101,7 +101,7 @@ class FigureResult(object):
     def value(self):
         results = self.results
         if len(results)==1:
-            return self.inquiry.format(results[0])
+            return self.navigator.format(results[0])
            
         else:
             return results

@@ -14,10 +14,10 @@ class Figure(object):
         self.alias = array(figure.pop('alias')) if 'alias' in figure else []
         self.seed = figure
 
-    def _process(self, inquiry, paths, userkwargs):
+    def _process(self, navigator, paths, userkwargs, extra_data):
         # filter out empty paths and generate a garden
-        garden = Garden(self, [p for p in paths if p])
+        garden = Garden(self, navigator, [p for p in paths if p], extra_data)
         # water down the garden with user arguments
-        query, period = garden.harvest(inquiry, userkwargs)
+        query, period = garden.harvest(navigator, userkwargs)
         # return a FigureResults
-        return FigureResult(inquiry, query, period)
+        return FigureResult(navigator, query, period, extra_data)

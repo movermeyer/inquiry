@@ -20,10 +20,10 @@ class Garden(object):
                     "arguments")
 
     COLUMN_RE = re.compile(r"^[a-zA-Z]{3,25}$")
-    __slots__ = ("figure", "network_kwargs", "seeds", "arguments")
+    __slots__ = ("navigator", "network_kwargs", "seeds", "arguments")
 
-    def __init__(self, figure, paths):
-        self.figure = figure
+    def __init__(self, figure, navigator, paths):
+        self.navigator = navigator
         # args found in network
         self.network_kwargs = {}
         self.seeds = []
@@ -322,7 +322,7 @@ class Garden(object):
             rk = key.split('_')[1] if key.find('_')>-1 else key
             seed = self.arguments.get(rk, self.arguments.get(rk+'[]'))
             if seed.get('adapt', True):
-                validated[key] = self.figure.inquiry.adapt(validated[key])
+                validated[key] = self.navigator.adapt(validated[key])
 
         # ----------------
         # Format Arguments
@@ -450,7 +450,7 @@ class Garden(object):
         for path in paths:
             if path:
                 outline = path.split('/')
-                figure = self.figure.inquiry.get(outline.pop(0))
+                figure = self.navigator.inquiry.get(outline.pop(0))
                 garden = Garden(figure, outline)
                 # -----------------
                 # Replace Base Soil

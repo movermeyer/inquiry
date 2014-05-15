@@ -110,8 +110,8 @@ class Query(object):
                         self._selects[sort] = sort
                 self._sortby = []
             # only need to pop these when sorting methods present
-            limit = validated.pop('limit')
-            offset = validated.pop('offset')
+            limit = validated.pop('limit') if 'limit' in validated else None
+            offset = validated.pop('offset') if 'offset' in validated else None
 
             # ----------------------
             # Change Self Properties
@@ -128,10 +128,8 @@ class Query(object):
             self._aggs = []
             With.with_(self(validated), as_="_data")
 
-            if limit:
-                validated['limit'] = limit
-            if offset:
-                validated['offset'] = offset
+            validated['limit'] = limit
+            validated['offset'] = offset
             return With(validated)
 
         else:
@@ -211,7 +209,10 @@ class Query(object):
 
             # Sort By
             # -------
-            elements['sortby'] = (" order by %s %s" % (",".join(self._sortby), validated['dir'])) if self._sortby else ""
+            # http://www.postgresql.org/docs/8.1/static/queries-order.html
+            #   Each column specification may be followed by an optional ASC or DESC to set the sort direction to ascending or descending. 
+            #   ASC order is the default
+            elements['sortby'] = (" order by %s %s" % (",".join(self._sortby), validated.get('dir', 'asc'))) if self._sortby else ""
 
             # Limit
             # -----

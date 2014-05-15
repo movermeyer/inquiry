@@ -1,3 +1,4 @@
+from .figure import Figure
 from .navigator import Navigator
 
 FIGURES = {}
@@ -26,9 +27,15 @@ class Inquiry(object):
         """
         return results
 
+    def adapter(self, *extra_data):
+        """Return value to be passed when adapting with valideer
+        ie. `valideer.parse(schema).validate(user_args, adapt=__this__)`
+        """
+        return True
+
     def add_figure(self, name, json):
         global FIGURES
-        FIGURES[name] = json
+        FIGURES[name] = Figure(name, json)
 
     def new(self, *args):
         """:args and :kwargs are passed through the figure
@@ -38,3 +45,19 @@ class Inquiry(object):
     def clear(self):
         global FIGURES
         FIGURES = {}
+
+    def get(self, index):
+        global FIGURES
+        if not FIGURES:
+            self.build()
+        
+        index = index.lower()
+        if index in FIGURES:
+            return FIGURES.get(index)
+        elif (index+"s") in FIGURES:
+            return FIGURES.get(index+"s")
+        for key in FIGURES:
+            if index in FIGURES[key].alias or index+"s" in FIGURES[key].alias:
+                return FIGURES[key]
+
+        raise LookupError('No figure found for `'+index+'`')

@@ -90,13 +90,13 @@ class Garden(object):
         if arguments:
             self.network_kwargs.update(arguments)
 
-    def harvest(self, organization, userkwargs):
-        operators, validated = self._harvest_validate(organization, userkwargs)
+    def harvest(self, userkwargs):
+        operators, validated = self._harvest_validate(userkwargs)
         period = deepcopy(validated.get('time'))
         query = self._harvest_query(operators, validated)
         return query, period
 
-    def _harvest_validate(self, organization, userkwargs):
+    def _harvest_validate(self, userkwargs):
         """Validate and Plant user provided arguments
         - Go through and plants the seedlings
           for any user arguments provided.
@@ -233,11 +233,11 @@ class Garden(object):
         # Validate
         # --------
         parser = valideer.parse(parser, additional_properties=False)
-        validated = parser.validate(userkwargs, adapt=organization)
+        validated = parser.validate(userkwargs, adapt=self.navigator.adapter())
         #   operators                   validated
         # --------------------------- | --------------------------------
         # {                           {
-        #   "type": ["!", "!"],         "type": ['item', 'modifier'],
+        #   "type": ["!", "!"],         "type": ['a', 'b'],
         #   "total": "<",               "total": "50",
         #   "tax": ("avg, ">"),         "tax": "1",
         #   "time": None                "time": "2014"
@@ -305,7 +305,7 @@ class Garden(object):
             validator = seed.get('validator')
             if validator == 'currency':
                 # somehow change currency to respect stores... (future)
-                validator = "USD"
+                validator = "float"
             validate = valideer.HomogeneousSequence(validator) if multi else validator
 
         else:
@@ -352,8 +352,8 @@ class Garden(object):
                 #   in the "WHERE" arguments as task only feature.
                 # operators add the query on its own
                 column, datatype = tuple(seed['column'].split('::'))
-                array = str(datatype).endswith('[]')
-                if array:
+                is_array = str(datatype).endswith('[]')
+                if is_array:
                     datatype = datatype[:-2]
                 ops = operators[seed['id']]
 
@@ -368,7 +368,7 @@ class Garden(object):
                     # ----------
                     if len(set(ops)) == 1:
                         # multiple arguments provided 
-                        w = ("%%(%(id)s)s::%(type)s[] %(operator)s array[%(column)s]" if not array \
+                        w = ("%%(%(id)s)s::%(type)s[] %(operator)s array[%(column)s]" if not is_array \
                              else "%(column)s %(operator)s %%(%(id)s)s::%(type)s[]") %\
                                   dict(column=column,
                                        operator={"=":"@>","!":"@>"}.get(ops[0], ops[0]),
@@ -401,7 +401,7 @@ class Garden(object):
                 # -----------
                 # "=" (array)
                 # -----------
-                elif array:
+                elif is_array:
                     """The column being compared to is an ARRAY of any type
                     """
                     w = "%(column)s %(operator)s array[%%(%(id)s)s::%(type)s]" %\
@@ -451,7 +451,7 @@ class Garden(object):
             if path:
                 outline = path.split('/')
                 figure = self.navigator.inquiry.get(outline.pop(0))
-                garden = Garden(figure, outline)
+                garden = Garden(figure, self.navigator, outline)
                 # -----------------
                 # Replace Base Soil
                 # -----------------

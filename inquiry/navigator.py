@@ -2,28 +2,38 @@ import re
 
 
 class Navigator(object):
-    __slots__ = ("inquiry", "paths", "figure")
+    __slots__ = ("inquiry", "paths", "figure", "extra_data")
     path = re.compile(r"([a-z]{3,25}|\d+|\+)")
 
-    def __init__(self, inquiry, exta_data):
+    def __init__(self, inquiry, extra_data):
         self.inquiry = inquiry
-        self.exta_data = exta_data
+        self.extra_data = extra_data
         self.figure = None
         self.paths = []
 
     def __getitem__(self, path):
-        self.append(path)
+        self._append(path)
         return self
 
     def __getattr__(self, path):
-        self.append(path)
+        self._append(path)
         return self
+
+    def _append(self, path):
+        if path is None:
+            return
+        elif not self.path.match(str(path)):
+            raise LookupError("Data not found for path `%s`" % str(path))
+        elif not self.figure:
+            self.figure = self.inquiry.get(path)
+        else:
+            self.paths.append(str(path))
 
     def __call__(self, *paths, **kwargs):
         """Calls only the index path
         Returns a container for the results
         """
-        if paths: [self.append(path) for path in paths if path]
+        if paths: [self._append(path) for path in paths if path]
         return self.figure._process(self, self.paths, kwargs)
 
     def adapt(self, value):
@@ -34,3 +44,6 @@ class Navigator(object):
 
     def format(self, value):
         return self.inquiry.format(value, *self.extra_data)
+
+    def adapter(self):
+        return self.inquiry.adapter(*self.extra_data)

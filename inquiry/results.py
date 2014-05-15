@@ -94,7 +94,7 @@ class FigureResult(object):
             return string
 
     @valideer.accepts(into=valideer.Nullable(valideer.Pattern(r"^[a-zA-Z\_]{1,25}$")))
-    def sql(self, into=None):
+    def pg(self, into=None):
         return self._query.replace("__into__", (" INTO "+(into or '')) if into else '')
 
     @property

@@ -19,6 +19,20 @@ class where(valideer.Pattern):
         return keys, '('+value+')'
 
 
+class boolean(valideer.Validator):
+    name = "bool"
+    def validate(self, value, adapt=True):
+        if value in (False, True):
+            return value
+        elif value.lower() in ('f', 'false', '0'):
+            return False
+        elif value.lower() in ('t', 'true', '1'):
+            return True
+        else:
+            raise valideer.ValidationError("Bool is not a valid format")
+
+
+
 class Garden(object):
     """A garden is the container and controller for Figures
     the objective is to create a query from user arguments

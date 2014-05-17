@@ -3,7 +3,7 @@ import re
 
 class Navigator(object):
     __slots__ = ("inquiry", "paths", "figure", "extra_data")
-    path = re.compile(r"([a-z]{3,25}|\d+|\+)")
+    path = re.compile(r"([a-z]{1,25}|\d+|\+)")
 
     def __init__(self, inquiry, extra_data):
         self.inquiry = inquiry

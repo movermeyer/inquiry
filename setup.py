@@ -7,7 +7,7 @@ install_requires = ["valideer==0.3", "timestring"]
 
 setup(name='inquiry',
       version='0.0.1',
-      description="advanced sql query builder",
+      description="psql query generator",
       long_description="",
       classifiers=classifiers,
       keywords='',

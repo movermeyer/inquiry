@@ -80,6 +80,21 @@ EXAMPLES = [
           "required": True
         }
       }
+    },
+    "/agg": {
+      "inherit": "a/merge",
+      "tables": "inner join that",
+      "select": "e",
+      "arguments": {
+        "d": {
+          "validator": "string",
+          "column": "d::int",
+          "agg": True
+        },
+        "&groupby" : {
+          "&default": "day"
+        }
+      }
     }
   },
   "arguments": {
@@ -153,3 +168,6 @@ class Tests(unittest.TestCase):
     def test_argument_merge(self):
         "arguments - can merge"
         self.assertEqual(self.q('a', 'merge').pg(), "select c from table where b > 10 and col_a = 'Whats up!'::text")
+
+    def test_with_query(self):
+        self.assertEqual(self.q('b', 'agg', r="ok", d="10").pg(), "with _data as (select c, e, column_day as day from table inner join that where b > 10 and col_a = 'Whats up!'::text group by day) select c, e, day from _data where d = '10'::int")

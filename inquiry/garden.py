@@ -110,6 +110,8 @@ class Garden(object):
         userkwargs.update(self.network_kwargs)
         # a simple set of original provided argument keys (used in IGNORES)
         original_kwargs = set(map(lambda k: k.split('_')[1] if k.find('_')>-1 else k, userkwargs.keys()))
+        # list of columns that are required from seeds
+        requires = []
 
         # -------------
         # Clean up Aggs
@@ -157,12 +159,15 @@ class Garden(object):
             # get value(s) from user
             value = userkwargs.pop(key) if key in userkwargs else seed.get('default')
 
-            # no argument provided, lets continue
+            # no argument provided, lets continue)
             if value is None or value == []:
                 if seed.get('required'):
                     raise valideer.ValidationError("missing required property: %s" % key, key)
                 else:
                     continue
+
+            # add requires
+            requires.extend(array(get(seed, 'requires', [])))
 
             # -----------
             # Inheritance
@@ -228,6 +233,10 @@ class Garden(object):
             if seed:
                 seed['id'] = str(userkwargs['sortby'].lower())
                 self.plant(seed)
+
+        for r in set(requires):
+            if userkwargs.get(r) is None:
+                raise valideer.ValidationError("required property not set: %s" % r, r)
 
         # --------
         # Validate

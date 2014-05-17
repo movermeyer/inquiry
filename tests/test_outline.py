@@ -94,7 +94,7 @@ EXAMPLES = [
 class Tests(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.inquiry = Inquiry()
+        self.inquiry = Inquiry(debug=True)
         self.inquiry.add_figure("a", EXAMPLES[0])
         self.inquiry.add_figure("b", EXAMPLES[1])
 
@@ -115,9 +115,9 @@ class Tests(unittest.TestCase):
 
     def test_outline_nav_regexp(self):
         "outline - nav with regexp"
-        self.assertEqual(self.q('a', 'count').pg(), "select count(o.*) as count from table where col_a = 'Hello'::text and b > 10")
+        self.assertEqual(self.q('a', 'count').pg(), "select count(o.*) as count from table where b > 10 and col_a = 'Hello'::text")
         self.setUp()
-        self.assertEqual(self.q('a', 'total').pg(), "select count(o.*) as count from table where col_a = 'Hello'::text and b > 10")
+        self.assertEqual(self.q('a', 'total').pg(), "select count(o.*) as count from table where b > 10 and col_a = 'Hello'::text")
 
     def test_outline_inheritance(self):
         self.assertRaisesRegexp(valideer.ValidationError, "missing required property: this", self.q, 'a', 'inherit')
@@ -126,7 +126,7 @@ class Tests(unittest.TestCase):
 
     def test_default_arguments(self):
         "argument - `default`"
-        self.assertEqual(self.q('a').pg(), "select value from table where col_a = 'Hello'::text and b > 10")
+        self.assertEqual(self.q('a').pg(), "select value from table where b > 10 and col_a = 'Hello'::text")
 
     def test_argument_list(self):
         "argument - accepts lists with `[]` at end of key"
@@ -134,9 +134,9 @@ class Tests(unittest.TestCase):
 
     def test_arguments_option_regexp(self):
         "argument:options - keys are regexp"
-        self.assertEqual(self.q('a', groupby="day").pg(),  "select column_day as day, value from table where col_a = 'Hello'::text and b > 10 group by day")
+        self.assertEqual(self.q('a', groupby="day").pg(),  "select column_day as day, value from table where b > 10 and col_a = 'Hello'::text group by day")
         self.setUp()
-        self.assertEqual(self.q('a', groupby="days").pg(), "select column_day as day, value from table where col_a = 'Hello'::text and b > 10 group by day")
+        self.assertEqual(self.q('a', groupby="days").pg(), "select column_day as day, value from table where b > 10 and col_a = 'Hello'::text group by day")
 
     def test_arguments_seeds_ignore_str(self):
         "argument:ignore - <str>"
@@ -152,4 +152,4 @@ class Tests(unittest.TestCase):
 
     def test_argument_merge(self):
         "arguments - can merge"
-        self.assertEqual(self.q('a', 'merge').pg(), "select c from table where col_a = 'Whats up!'::text and b > 10")
+        self.assertEqual(self.q('a', 'merge').pg(), "select c from table where b > 10 and col_a = 'Whats up!'::text")

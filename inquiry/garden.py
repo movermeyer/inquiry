@@ -336,7 +336,7 @@ class Garden(object):
         # --------------------
         # Build Query Elements
         # --------------------
-        query = Query()
+        query = Query(debug=self.navigator.inquiry.debug)
         query.groupby(*array(validated.get('groupby', [])))
         query.sortby(*array(validated.get('sortby', [])))
 

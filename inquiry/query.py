@@ -5,7 +5,10 @@ from .helpers import unique
 
 
 class Query(object):
-    def __init__(self):
+    __slots__ = ("debug", "_with", "_selects", "_where", "_tables", "_groupby", "_sortby", "_aggs", "_into")
+
+    def __init__(self, debug=False):
+        self.debug = debug
         self._with = []
         self._selects = {}
         self._where = {}
@@ -184,6 +187,7 @@ class Query(object):
                 [self._where.pop(key) for key in keys if key in self._where]
 
             wheres = list(itertools.chain(*self._where.values()))
+            if self.debug: wheres = sorted(wheres)
             elements['where'] = (" where " + ' and '.join(wheres)) if wheres else ""
 
             # Group By

@@ -11,7 +11,10 @@ except ImportError:
 FIGURES = {}
 
 class Inquiry(object):
-    def __init__(self):
+    def __init__(self, debug=False):
+        """Debug will sort the sql statement for testing accuracy
+        """
+        self.debug = debug
         self.build()
 
     def adapt(self, value):

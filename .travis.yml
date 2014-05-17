@@ -3,11 +3,9 @@ notifications:
   email: false
 python:
   - 2.7
-  - pypy
 install:
   - python setup.py install
-  - pip install -r requirements.txt
-  - pip install coveralls
+  - pip install coveralls psycopg2
 script:
   coverage run -m unittest discover -s tests
 after_success:

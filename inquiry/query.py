@@ -1,13 +1,17 @@
 import valideer
+import itertools
 
 from .helpers import unique
 
 
 class Query(object):
-    def __init__(self):
+    __slots__ = ("debug", "_with", "_selects", "_where", "_tables", "_groupby", "_sortby", "_aggs", "_into")
+
+    def __init__(self, debug=False):
+        self.debug = debug
         self._with = []
         self._selects = {}
-        self._where = {"_":[]}
+        self._where = {}
         self._tables = []
         self._groupby = []
         self._sortby = []
@@ -49,12 +53,8 @@ class Query(object):
     def into(self, bool):
         self._into = bool
 
-    def where(self, column, where):
-        if where:
-            if column is None:
-                self._where['_'].append(where)
-            else:
-                self._where[column] = where
+    def where(self, column, *where):
+        self._where.setdefault(column, []).extend(list(where))
 
     def groupby(self, *groupby):
         for g in groupby:
@@ -100,7 +100,7 @@ class Query(object):
             With.tables("from _data")
             for col in self._aggs:
                 if col in self._where:
-                    With.where(col, self._where.pop(col))
+                    With.where(col, *self._where.pop(col))
             # ~~groupby~~ no need
             if self._sortby:
                 With.sortby(*self._sortby)
@@ -180,26 +180,14 @@ class Query(object):
                 # valideer produces the tuple below
                 keys, string = validated.pop("where")
                 try:
-                    self._where['_'].append(string % self._where)
+                    self._where.setdefault('_', []).append(string % self._algebra(self._where))
                 except KeyError as e:
                     raise valideer.ValidationError("Missing argument `%s` needed in provided where clause" % str(e)[1:-1],
                                                    str(e)[1:-1])
                 [self._where.pop(key) for key in keys if key in self._where]
 
-            wheres = []
-            for w in self._where.pop('_'):
-                if w:
-                    if type(w) is list:
-                        wheres.extend(w)
-                    else:
-                        wheres.append(w)
-            for w in self._where.values():
-                if w:
-                    if type(w) is list:
-                        wheres.extend(w)
-                    else:
-                        wheres.append(w)
-
+            wheres = list(itertools.chain(*self._where.values()))
+            if self.debug: wheres = sorted(wheres)
             elements['where'] = (" where " + ' and '.join(wheres)) if wheres else ""
 
             # Group By
@@ -226,3 +214,6 @@ class Query(object):
             # Format SQL
             # ----------
             return (query % elements) % validated
+
+    def _algebra(self, dct):
+        return dict([(key, (("(%s)" % " and ".join(value)) if len(value) > 1 else value[0])) for key, value in dct.items() if value])

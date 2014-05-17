@@ -336,7 +336,7 @@ class Garden(object):
         # --------------------
         # Build Query Elements
         # --------------------
-        query = Query()
+        query = Query(debug=self.navigator.inquiry.debug)
         query.groupby(*array(validated.get('groupby', [])))
         query.sortby(*array(validated.get('sortby', [])))
 
@@ -427,9 +427,9 @@ class Garden(object):
                 ops = operators.get(seed.get('id', None))
                 # not()
                 if ops and (type(ops) is list and '!' in ops) or ops == '!':
-                    query.where(seed['id'], [("not(%s)" % w) for w in array(get(seed, 'where', []))])
+                    query.where(seed['id'], *[("not(%s)" % w) for w in array(get(seed, 'where', []))])
                 else:
-                    query.where(seed.get('id'), array(get(seed, 'where', [])))
+                    query.where(seed.get('id'), *array(get(seed, 'where', [])))
 
             query.tables(*array(get(seed, 'table', [])))
             query.groupby(*array(get(seed, 'groupby', [])))

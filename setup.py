@@ -3,9 +3,11 @@ from setuptools import setup
 classifiers = ["Development Status :: 4 - Beta",
                "License :: OSI Approved :: Apache Software License"]
 
+install_requires = ["valideer==0.3", "timestring"]
+
 setup(name='inquiry',
       version='0.0.1',
-      description="advanced sql query builder",
+      description="psql query generator",
       long_description="",
       classifiers=classifiers,
       keywords='',
@@ -16,5 +18,5 @@ setup(name='inquiry',
       packages=["inquiry"],
       include_package_data=True,
       zip_safe=False,
-      install_requires=[],
+      install_requires=install_requires,
       entry_points=None)

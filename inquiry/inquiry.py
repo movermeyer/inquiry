@@ -1,16 +1,26 @@
 from .figure import Figure
 from .navigator import Navigator
 
+try:
+    from psycopg2.extensions import adapt
+except ImportError:
+    def adapt(value):
+        raise EnvironmentError("No adapting method found.")
+
+
 FIGURES = {}
 
 class Inquiry(object):
-    def __init__(self):
+    def __init__(self, debug=False):
+        """Debug will sort the sql statement for testing accuracy
+        """
+        self.debug = debug
         self.build()
 
     def adapt(self, value):
         """Return the value adapted for sql
         """
-        pass
+        return adapt(value)
 
     def query(self, query):
         """Return the results of this query

@@ -1,4 +1,5 @@
 import valideer
+import itertools
 
 from .helpers import unique
 
@@ -7,7 +8,7 @@ class Query(object):
     def __init__(self):
         self._with = []
         self._selects = {}
-        self._where = {"_":[]}
+        self._where = {}
         self._tables = []
         self._groupby = []
         self._sortby = []
@@ -49,12 +50,8 @@ class Query(object):
     def into(self, bool):
         self._into = bool
 
-    def where(self, column, where):
-        if where:
-            if column is None:
-                self._where['_'].append(where)
-            else:
-                self._where[column] = where
+    def where(self, column, *where):
+        self._where.setdefault(column, []).extend(list(where))
 
     def groupby(self, *groupby):
         for g in groupby:
@@ -100,7 +97,7 @@ class Query(object):
             With.tables("from _data")
             for col in self._aggs:
                 if col in self._where:
-                    With.where(col, self._where.pop(col))
+                    With.where(col, *self._where.pop(col))
             # ~~groupby~~ no need
             if self._sortby:
                 With.sortby(*self._sortby)
@@ -186,20 +183,7 @@ class Query(object):
                                                    str(e)[1:-1])
                 [self._where.pop(key) for key in keys if key in self._where]
 
-            wheres = []
-            for w in self._where.pop('_'):
-                if w:
-                    if type(w) is list:
-                        wheres.extend(w)
-                    else:
-                        wheres.append(w)
-            for w in self._where.values():
-                if w:
-                    if type(w) is list:
-                        wheres.extend(w)
-                    else:
-                        wheres.append(w)
-
+            wheres = list(itertools.chain(*self._where.values()))
             elements['where'] = (" where " + ' and '.join(wheres)) if wheres else ""
 
             # Group By

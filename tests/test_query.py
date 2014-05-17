@@ -72,6 +72,26 @@ class Tests(unittest.TestCase):
         q.into(False)
         self.assertEqual("SELECT"+q({})[6:], "SELECT column_1 as name from here where name like 'this'")
 
+    def test_where_multi(self):
+        "query: multiple where"
+        q = Query()
+        q.select("column_1 as name")
+        q.where("name", "name like 'this'")
+        q.where("this", "this like 'this'")
+        q.tables("from here")
+        q.into(False)
+        self.assertEqual("SELECT"+q({})[6:], "SELECT column_1 as name from here where this like 'this' and name like 'this'")
+
+    def test_where_multi_same(self):
+        "query: multiple where of same column"
+        q = Query()
+        q.select("column_1 as name")
+        q.where("name", "name like 'this'")
+        q.where("name", "name < 10")
+        q.tables("from here")
+        q.into(False)
+        self.assertEqual("SELECT"+q({})[6:], "SELECT column_1 as name from here where name like 'this' and name < 10")
+
     def test_where_aggs(self):
         "query: manages where aggs"
         q = Query()

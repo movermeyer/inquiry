@@ -1,5 +1,5 @@
 import unittest
-from valideer import ValidationError
+import valideer
 
 from inquiry.query import Query
 
@@ -9,7 +9,7 @@ class Tests(unittest.TestCase):
         "query: must have a from table"
         q = Query()
         q.select("column_1", "column_2")
-        self.assertRaises(ValidationError, q, {}) 
+        self.assertRaises(valideer.ValidationError, q, {}) 
 
     def test_resort_tables(self):
         "query: re-organizes tables"
@@ -176,3 +176,34 @@ class Tests(unittest.TestCase):
         q.with_("select this from that", "_that")
         q.tables("from table")
         self.assertEqual(q({}), "with _that as (select this from that) select column_1__into__ from table")
+
+
+    def test_where_arrangement(self):
+        q = Query()
+        q.select("a")
+        q.where("a", "a > 10")
+        q.where("b", "b > 20")
+        q.where("c", "c > 30")
+        q.tables("from t")
+        q.into(False)
+
+        # no column `d`
+        self.assertRaises(valideer.ValidationError, q, valideer.parse({"where": "where"}).validate({"where": "(d|b)&c"}))
+
+        self.assertEqual(q(valideer.parse({"where": "where"}).validate({"where": "(a|b)&c"})),
+                         "select a from t where ((a > 10 or b > 20) and c > 30)")
+
+    def test_where_multi_arg(self):
+        q = Query()
+        q.select("a")
+        q.where("a", "a=1")
+        q.where("b", "b=2")
+        q.where("b", "b=3")
+        q.tables("from t")
+        q.into(False)
+
+        # no column `col_1`
+        self.assertRaises(valideer.ValidationError, q, valideer.parse({"where": "where"}).validate({"where": "a|b|c"}))
+
+        self.assertEqual(q(valideer.parse({"where": "where"}).validate({"where": "a|b"})),
+                         "select a from t where (a=1 or (b=2 and b=3))")

@@ -177,7 +177,7 @@ class Query(object):
                 # valideer produces the tuple below
                 keys, string = validated.pop("where")
                 try:
-                    self._where['_'].append(string % self._where)
+                    self._where.setdefault('_', []).append(string % self._algebra(self._where))
                 except KeyError as e:
                     raise valideer.ValidationError("Missing argument `%s` needed in provided where clause" % str(e)[1:-1],
                                                    str(e)[1:-1])
@@ -210,3 +210,6 @@ class Query(object):
             # Format SQL
             # ----------
             return (query % elements) % validated
+
+    def _algebra(self, dct):
+        return dict([(key, (("(%s)" % " and ".join(value)) if len(value) > 1 else value[0])) for key, value in dct.items() if value])

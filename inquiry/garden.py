@@ -6,6 +6,19 @@ from .helpers import *
 from .query import Query
 
 
+class where(valideer.Pattern):
+    name = "where"
+    regexp = re.compile(r"[\w&<>|*/+\-\(\)]+")
+    rp = re.compile(r"(\w+)")
+    def validate(self, value, adapt=True):
+        super(where, self).validate(value)
+        keys = self.rp.findall(value)
+        value = self.rp.sub(r'%(\1)s', value)
+        value = value.replace('|', ' or ')
+        value = value.replace('&', ' and ')
+        return keys, '('+value+')'
+
+
 class Garden(object):
     """A garden is the container and controller for Figures
     the objective is to create a query from user arguments

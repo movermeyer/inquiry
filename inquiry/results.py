@@ -17,7 +17,7 @@ def json_defaults(obj):
         return str(obj)
 
 
-class FigureResult(object):
+class Results(object):
     __slots__ = ("navigator", "_query", "period", "_results", "_speed")
 
     def __init__(self, navigator, query, period):
@@ -45,10 +45,10 @@ class FigureResult(object):
         result = dict(results=results,
                       meta={"status": 200,
                             "total": len(results),
-                            "speed": "%.fms" % self._speed,
-                            "time": {
-                                "start": str(self.period.start),
-                                "end": str(self.period.end)}})
+                            "speed": "%.fms" % self._speed})
+        if self.period:
+            result["time"] = {"start": str(self.period.start), 
+                              "end": str(self.period.end)}
 
         return dumps(result, default=json_defaults)
     
@@ -100,9 +100,8 @@ class FigureResult(object):
     @property
     def value(self):
         results = self.results
-        if len(results)==1:
+        if results and len(results)==1:
             return self.navigator.format(results[0])
-           
         else:
             return results
 
@@ -127,8 +126,8 @@ class FigureResult(object):
         """
         results = self.results
         if results:
-            # retuns a generator that will do the replacement operation on call
-            return (dict([(k, self._lookup(k, v)) for k,v in row.iteritems()]) for row in results)
+            for row in iter(results):
+                yield self.navigator.format(row)
 
     def __len__(self):
         results = self.results

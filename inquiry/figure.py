@@ -1,6 +1,6 @@
 from .helpers import *
 from .garden import Garden
-from .results import FigureResult
+from .results import Results
 
 
 class Figure(object):
@@ -19,5 +19,5 @@ class Figure(object):
         garden = Garden(self, navigator, [p for p in paths if p])
         # water down the garden with user arguments
         query, period = garden.harvest(userkwargs)
-        # return a FigureResults
-        return FigureResult(navigator, query, period)
+        # return a Resultss
+        return Results(navigator, query, period)

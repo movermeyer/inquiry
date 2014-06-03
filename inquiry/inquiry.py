@@ -17,7 +17,7 @@ class Inquiry(object):
         self.debug = debug
         self.build()
 
-    def adapt(self, value):
+    def adapt(self, value, *extra_data):
         """Return the value adapted for sql
         """
         return adapt(value)

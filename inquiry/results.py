@@ -117,7 +117,7 @@ class Results(object):
 
     def __getattr__(self, index):
         if len(self.results) == 1:
-            return self.navigator.format(self.results[0][index])
+            return self.navigator.format(index, self.results[0][index])
         else:
             raise ValueError("Cannot get attr from list")
     

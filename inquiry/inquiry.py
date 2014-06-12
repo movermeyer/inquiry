@@ -32,10 +32,10 @@ class Inquiry(object):
         """
         pass
 
-    def format(self, results):
+    def format(self, key, value):
         """Format the returned results as they are yielded
         """
-        return results
+        return value
 
     def adapter(self, *extra_data):
         """Return value to be passed when adapting with valideer

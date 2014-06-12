@@ -1,12 +1,12 @@
 create table users (
-  userid int, 
+  userid serial primary key, 
   name text, 
   email text unique, 
   joined timestamptz
 );
 
 create table orders (
-  orderid int primary key,
+  orderid serial primary key,
   userid int references users,
   total numeric,
   due numeric,

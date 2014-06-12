@@ -14,8 +14,8 @@ EXAMPLES = [
   "tables": "from orders o",
   "outline": {
     "index": {
-      "select": ["o.id", "o.userid", "o.total", "o.due", "o.placed", "u.name", "u.email"],
-      "tables": ["inner join users using (userid)"]
+      "select": ["o.orderid", "o.userid", "o.total", "o.due", "o.placed", "u.name", "u.email"],
+      "tables": ["inner join users u using (userid)"]
     },
     "/": {
       "/count": {
@@ -75,9 +75,17 @@ class Tests(unittest.TestCase):
     def setUp(self):
         self.q = self.inquiry.new()
 
-    def test_one_row(self):
+    def test_one_row_one_value(self):
         result = self.q("order", "totals", due=">0")
         self.assertEquals(result, Decimal("398.89"))
+
+    def test_one_row_multi_values(self):
+        "cannot compare when there are many results"
+        self.skipTest("wip")
+        result = self.q("orders", due="0")
+        print result, result > 0
+        self.assertRaises(TypeError, lambda: result > 10)
+        raise Exception("Hello")
 
     def test_json(self):
         result = json.loads(self.q("order", "totals", due=">0", groupby="user").json())

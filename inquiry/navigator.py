@@ -42,8 +42,8 @@ class Navigator(object):
     def query(self, query):
         return self.inquiry.query(query, *self.extra_data)
 
-    def format(self, value):
-        return self.inquiry.format(value, *self.extra_data)
+    def format(self, key, value):
+        return self.inquiry.format(key, value, *self.extra_data)
 
     def adapter(self):
         return self.inquiry.adapter(*self.extra_data)

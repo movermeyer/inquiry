@@ -9,7 +9,7 @@ python:
   - 2.7
 install:
   - python setup.py install
-  - pip install coveralls psycopg2 tornpsql
+  - pip install coveralls tornpsql
   - psql -c 'create database inquiry;' -U postgres
   - psql inquiry -f tests/demo.sql
 script:

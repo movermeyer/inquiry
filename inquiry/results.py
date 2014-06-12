@@ -101,7 +101,7 @@ class Results(object):
     def value(self):
         results = self.results
         if results and len(results)==1:
-            return self.navigator.format(results[0])
+            return list(self)[0]
         else:
             return results
 
@@ -117,7 +117,7 @@ class Results(object):
 
     def __getattr__(self, index):
         if len(self.results) == 1:
-            return self._lookup(index, self.results[0][index])
+            return self.navigator.format(self.results[0][index])
         else:
             raise ValueError("Cannot get attr from list")
     
@@ -127,7 +127,7 @@ class Results(object):
         results = self.results
         if results:
             for row in iter(results):
-                yield self.navigator.format(row)
+                yield dict([(key, self.navigator.format(key, value)) for key, value in row.iteritems()])
 
     def __len__(self):
         results = self.results

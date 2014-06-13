@@ -3,7 +3,7 @@ notifications:
   email: false
 env:
   global:
-    - PSQL=postgres://postgres:localhost:5432/inquiry
+    - PSQL=postgres://postgres:@localhost:5432/inquiry
 services: postgres
 python:
   - 2.7

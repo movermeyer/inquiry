@@ -47,8 +47,6 @@ class Query(object):
         if column is False:
             self._selects = {}
         else:
-            if agg:
-                self._aggs.append(_as or column)
             self._selects.setdefault((_as or column), (column, agg, _as, distinct))
 
     def tables(self, *tables):
@@ -149,33 +147,44 @@ class Query(object):
             select total from _limited order by total asc limit (select round(count(*)*.1) from _limited)
             ```
             """
-            _limited = Query()
-            _limited._selects = deepcopy(self._selects)
-            self._selects = dict(zip(self._selects.keys(), map(lambda a: (a, None, None, None), self._selects.keys())))
-            _limited.into(False)
-            _limited.tables("from _limited")
+            # column, agg, as, distinct
+            # only AGG: peice 3: select sum(column) from _ll
+            _l = Query()
+            _l._selects = dict(map(lambda d: (d[0], (d[1][0], d[1][1], d[1][2], None)), self._selects.items()))
+            _l.tables("from _ll")
 
+            # only ORDER BY and LIMIT: peice 2
+            _ll = Query()
+
+            # select table.column as as_column
+            _ll._selects = dict(map(lambda d: (d[0], (d[1][2] or d[1][0], None, None, None)), self._selects.items()))
+            _ll.tables("from _l")
+            _ll.into(False)
+            [_ll.agg(a) for a in self._aggs]
             if self._sortby:
-                _limited.sortby(*self._sortby)
+                _ll.sortby(*self._sortby)
                 # need to select sorts in next query
                 for sort in self._sortby:
                     if sort not in self._selects.keys():
                         self._selects[sort] = sort
                 self._sortby = []
 
-            _limited._with = self._with
-            self._with = []
 
-            [_limited.agg(a) for a in self._aggs]
+            # _l._with = self._with
+            # print "\033[92m....\033[0m", _l._with
+            # self._with = []
+
+            self._selects = dict(map(lambda d: (d[0], (d[1][0], None, d[1][2], d[1][3])), self._selects.items()))
             self._aggs = []
-
             self.into(False)
 
             limit = validated.pop('limit')
-            _limited.with_(self(validated), as_="_limited")
+            _l.with_(self(validated), "_l")
+            validated['limit'] = "(select round(count(*)*%s) from _ll)" % (float(limit[:-1])/100)
+            _l.with_(_ll(validated), "_ll")
+            validated.pop('limit')
+            return _l(validated)
 
-            validated['limit'] = "(select round(count(*)*%s) from _limited)" % (float(limit[:-1])/100)
-            return _limited(validated)
         else:
 
             query = "%(with)sselect %(select)s%(into)s %(tables)s%(where)s%(groupby)s%(sortby)s%(limit)s%(offset)s"
@@ -194,7 +203,9 @@ class Query(object):
                     if sort not in self._selects.keys():
                         self._selects[sort] = (sort, None, None, None)
 
-            elements["select"] = ', '.join(map(self._column, sorted(self._selects.values(), key=lambda a: a[3])))
+            elements["select"] = ', '.join(map(self._column, 
+                                               sorted(self._selects.values(), 
+                                                      key=lambda a: (a[3], a[0]))))
 
             # Into
             # ----

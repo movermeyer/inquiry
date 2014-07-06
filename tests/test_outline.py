@@ -26,7 +26,11 @@ EXAMPLES = [
     "/": {
       # regexp example
       "/(count|total)": {
-        "select": "count(o.*) as count"
+        "select": {
+          "agg": "count",
+          "column": "o.*",
+          "as": "count"
+        }
       },
       "/inherit": {
         "inherit": "b/other",
@@ -122,7 +126,7 @@ class Tests(unittest.TestCase):
     def test_outline_inheritance(self):
         self.assertRaisesRegexp(valideer.ValidationError, "missing required property: this", self.q, 'a', 'inherit')
         self.setUp()
-        self.assertEqual(self.q('a', 'inherit', this="apples", r="something").pg(), "select this, that from table inner join other using (this) where col_a = 'Hello'::text and r = 'something'")
+        self.assertEqual(self.q('a', 'inherit', this="apples", r="something").pg(), "select that, this from table inner join other using (this) where col_a = 'Hello'::text and r = 'something'")
 
     def test_default_arguments(self):
         "argument - `default`"

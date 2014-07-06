@@ -194,11 +194,11 @@ class Garden(object):
             ignores = set(array(get(seed, 'ignore')))
             found = ignores & original_kwargs
             ignore = ignores & all_keys
-            if found:
-                raise valideer.ValidationError("additional properties: %s" % ",".join(found), found)
-            elif ignore:
+            if ignore or found:
                 # default arguments to ignore
                 [userkwargs.pop(k) for k in ignore]
+            if found and not get(seed, 'silent'):
+                raise valideer.ValidationError("additional properties: %s" % ",".join(found), found)
                 
         # -------------------------
         # Custom Operators (part 1)
@@ -351,7 +351,11 @@ class Garden(object):
 
         for seed in self.seeds:
             [query.with_(with_) for with_ in array(get(seed, 'with', []))]
-            query.select(*array(get(seed, 'select', [])))
+            for column in array(get(seed, 'select', [])):
+                if type(column) is dict:
+                    query.select(column['column'], column.get('agg'), column.get('as'), column.get('distinct'))
+                else:
+                    query.select(column)
 
             # --------------------------
             # Formulate SELECT and WHERE
@@ -397,10 +401,7 @@ class Garden(object):
                 elif type(ops) is tuple:
                     # we have an aggregate method provided
                     # need to select that data for sorting/where
-                    query.select("%(agg)s(%(column)s) as %(id)s" % \
-                                  dict(agg=ops[0],
-                                       column=column,
-                                       id=seed['id']))
+                    query.select(column, ops[0], seed['id'])
                     query.agg(seed['id'])
                     query.where(seed['id'], "%(id)s %(operator)s %%(%(id)s)s::%(type)s" % \
                                             dict(operator={"~":"@@","!":"!="}.get(ops[1], ops[1]),

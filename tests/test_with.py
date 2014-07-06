@@ -15,7 +15,7 @@ class WithTest(unittest.TestCase):
       "arguments": {
         "count": {
           # the `False` will clear out the seleted columns from above
-          "select": [False, "count(*) as count"],
+          "select": [False, {"column": "*", "agg": "count", "as": "count"}],
           "validator": "number",
           "column": "count::int",
           # to compare this value we must make a with query.
@@ -29,6 +29,7 @@ class WithTest(unittest.TestCase):
         }
       }
     }
+
     @classmethod
     def setUpClass(self):
         self.inquiry = Inquiry(debug=True)
@@ -62,7 +63,7 @@ class WithTest2(unittest.TestCase):
               "default": "customer"
             },
             "count": {
-              "select": "count(*) as count",
+              "select": {"agg": "count", "column": "*", "as": "count"},
               "validator": "number",
               "column": "count::int",
               "agg": True

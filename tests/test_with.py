@@ -45,7 +45,7 @@ class WithTest(unittest.TestCase):
         self.assertRaisesRegexp(valideer.ValidationError, "required property not set: groupby", self.q, 'data', count=10)
 
     def test_agg_provided(self):
-        self.assertEqual(self.q('data', count=10, groupby="customer").pg(), "with _data as (select customer, count(*) as count from orders group by customer) select count, customer from _data where count = 10::int")
+        self.assertEqual(self.q('data', count=10, groupby="customer").pg(), "with _data as (select count(*) as count, customer from orders group by customer) select count, customer from _data where count = 10::int")
 
 
 class WithTest2(unittest.TestCase):
@@ -87,5 +87,5 @@ class WithTest2(unittest.TestCase):
         self.assertRaisesRegexp(valideer.ValidationError, r"additional properties: \[\'count\'\]", self.q, 'data', count=10)
 
     def test_agg_provided(self):
-        self.assertEqual(self.q('data', 'bycustomer', count=10).pg(), "with _data as (select customer, count(*) as count from orders group by customer) select count, customer from _data where count = 10::int")
+        self.assertEqual(self.q('data', 'bycustomer', count=10).pg(), "with _data as (select count(*) as count, customer from orders group by customer) select count, customer from _data where count = 10::int")
 

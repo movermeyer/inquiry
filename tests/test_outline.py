@@ -26,7 +26,11 @@ EXAMPLES = [
     "/": {
       # regexp example
       "/(count|total)": {
-        "select": "count(o.*) as count"
+        "select": {
+          "agg": "count",
+          "column": "o.*",
+          "as": "count"
+        }
       },
       "/inherit": {
         "inherit": "b/other",

@@ -8,36 +8,46 @@ class Tests(unittest.TestCase):
     def test_from(self):
         "query: must have a from table"
         q = Query()
-        q.select("column_1", "column_2")
+        q.select("column_1")
+        q.select("column_2")
         self.assertRaises(valideer.ValidationError, q, {}) 
 
     def test_resort_tables(self):
         "query: re-organizes tables"
         q = Query()
-        q.select("column_1", "column_2")
+        q.select("column_1")
+        q.select("column_2")
         q.tables("left join this using (that)", "from here")
         self.assertEqual("SELECT"+q({})[6:], "SELECT column_2, column_1__into__ from here left join this using (that)")
 
         q = Query()
-        q.select("column_1", "column_2")
+        q.select("column_1")
+        q.select("column_2")
         q.tables("left join this using (that)", "from here", "inner join a using (b)")
         self.assertEqual("SELECT"+q({})[6:], "SELECT column_2, column_1__into__ from here inner join a using (b) left join this using (that)")
 
     def test_filters_selects(self):
         "query: filters select columns"
         q = Query()
-        q.select("column_1", "column_2", "column_1", "column_1")
+        q.select("column_1")
+        q.select("column_2")
+        q.select("column_1")
+        q.select("column_1")
         q.tables("from here")
         self.assertEqual("SELECT"+q({})[6:], "SELECT column_2, column_1__into__ from here")
 
         q = Query()
-        q.select("column_1", "column_2", False, "column_3")
+        q.select("column_1")
+        q.select("column_2")
+        q.select(False)
+        q.select("column_3")
         q.tables("from here")
         self.assertEqual("SELECT"+q({})[6:], "SELECT column_3__into__ from here")
 
     def test_filter_tables(self):
         q = Query()
-        q.select("column_1", "column_2")
+        q.select("column_1")
+        q.select("column_2")
         q.tables("from here", False, "inner join this using (that)", "from there")
         self.assertEqual("SELECT"+q({})[6:], "SELECT column_2, column_1__into__ from there inner join this using (that)")
 
@@ -57,7 +67,7 @@ class Tests(unittest.TestCase):
     def test_column_as(self):
         "query: select as name"
         q = Query()
-        q.select("column_1 as name")
+        q.select("column_1", None, "name")
         self.assertItemsEqual(q._selects.keys(), ["name"])
         q.tables("from here")
         q.into(False)
@@ -66,7 +76,7 @@ class Tests(unittest.TestCase):
     def test_where(self):
         "query: manages where clause"
         q = Query()
-        q.select("column_1 as name")
+        q.select("column_1", None, "name")
         q.where("name", "name like 'this'")
         q.tables("from here")
         q.into(False)
@@ -75,7 +85,7 @@ class Tests(unittest.TestCase):
     def test_where_multi(self):
         "query: multiple where"
         q = Query()
-        q.select("column_1 as name")
+        q.select("column_1", None, "name")
         q.where("name", "name like 'this'")
         q.where("this", "this like 'this'")
         q.tables("from here")
@@ -85,7 +95,7 @@ class Tests(unittest.TestCase):
     def test_where_multi_same(self):
         "query: multiple where of same column"
         q = Query()
-        q.select("column_1 as name")
+        q.select("column_1", None, "name")
         q.where("name", "name like 'this'")
         q.where("name", "name < 10")
         q.tables("from here")
@@ -95,7 +105,8 @@ class Tests(unittest.TestCase):
     def test_where_aggs(self):
         "query: manages where aggs"
         q = Query()
-        q.select("sum(col) as total", "store")
+        q.select("col", "sum", "total")
+        q.select("store")
         q.agg("total")
         q.groupby("store")
         q.where("total", "total > 50")
@@ -105,7 +116,8 @@ class Tests(unittest.TestCase):
 
     def test_agg_filter(self):
         q = Query()
-        q.select("total", "store")
+        q.select("total")
+        q.select("store")
         q.agg("total")
         q.agg("total")
         q.where("total", "total > 50")
@@ -113,7 +125,8 @@ class Tests(unittest.TestCase):
         self.assertEqual("SELECT"+q({})[6:], "SELECT total, store__into__ from here where total > 50")
 
         q = Query()
-        q.select("total", "store")
+        q.select("total")
+        q.select("store")
         q.agg("total")
         q.agg(False)
         q.agg("that")
@@ -124,7 +137,7 @@ class Tests(unittest.TestCase):
     def test_arguments(self):
         "query: inserts arguments"
         q = Query()
-        q.select("%(agg)s(col) as total")
+        q.select("col", "%(agg)s", "total")
         q.where("total", "total > 50")
         q.tables("from here")
         q.into(False)
@@ -145,7 +158,8 @@ class Tests(unittest.TestCase):
         self.assertEqual("SELECT"+q(dict(dir="asc"))[6:], "SELECT column_2, column_1__into__ from table order by column_2 asc")
 
         q = Query()
-        q.select("column_1", "column_2")
+        q.select("column_1")
+        q.select("column_2")
         q.sortby("column_2")
         q.tables("from table")
         self.assertEqual("SELECT"+q(dict(dir="desc"))[6:], "SELECT column_2, column_1__into__ from table order by column_2 desc")
@@ -177,6 +191,30 @@ class Tests(unittest.TestCase):
         q.tables("from table")
         self.assertEqual(q({}), "with _that as (select this from that) select column_1__into__ from table")
 
+    def test_percentage_limit(self):
+        "query a percentage of records"
+        q = Query()
+        q.select("total")
+        q.tables("from orders")
+        q.sortby('total')
+        self.assertEqual(q({"limit":"50%"}), "with _limited as (select total from orders) select total from _limited order by total asc limit (select round(count(*)*0.5) from _limited)")
+
+    def test_percentage_agg(self):
+        "query a percentage of records"
+        q = Query()
+        q.select("total", "sum", "total")
+        q.tables("from orders")
+        q.sortby('total')
+        self.assertEqual(q({"limit":"50%"}), "with _limited as (select total from orders) select sum(total) as total from _limited order by total asc limit (select round(count(*)*0.5) from _limited)")
+
+    def test_percentage_where(self):
+        "query a percentage of records w/ where condition"
+        q = Query()
+        q.select("total")
+        q.tables("from orders")
+        q.where("total", "total > 10")
+        q.sortby('total')
+        self.assertEqual(q({"limit":"10%"}), "with _limited as (select total from orders where total > 10) select total from _limited order by total asc limit (select round(count(*)*0.1) from _limited)")
 
     def test_where_arrangement(self):
         q = Query()

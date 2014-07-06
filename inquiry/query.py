@@ -267,7 +267,7 @@ class Query(object):
     def _column(self, peices):
         col, agg, _as, distinct = peices
         return "".join(["distinct " if distinct else "",
-                        agg or "", "(" if agg else "", col, ")" if agg else "",
+                        agg or "", "(" if agg else "", (('"%s"'%col) if col == 'group' else col), ")" if agg else "",
                         " as " if _as else "", _as or ""])
                        # lambda g: ("".join([])'"%s"'%g) if g == 'group' else g
 

@@ -149,13 +149,13 @@ class Tests(unittest.TestCase):
         q.select("column_1")
         q.sortby("column_2")
         q.tables("from table")
-        self.assertEqual("SELECT"+q(dict(dir="asc"))[6:], "SELECT column_2, column_1__into__ from table order by column_2 asc")
+        self.assertEqual("SELECT"+q(dict(dir="asc"))[6:], "SELECT column_1, column_2__into__ from table order by column_2 asc")
         
         q = Query()
         q.select("column_1")
         q.sortby("column_2")
         q.tables("from table")
-        self.assertEqual("SELECT"+q(dict(dir="asc"))[6:], "SELECT column_2, column_1__into__ from table order by column_2 asc")
+        self.assertEqual("SELECT"+q(dict(dir="asc"))[6:], "SELECT column_1, column_2__into__ from table order by column_2 asc")
 
         q = Query()
         q.select("column_1")
@@ -197,7 +197,7 @@ class Tests(unittest.TestCase):
         q.select("total")
         q.tables("from orders")
         q.sortby('total')
-        self.assertEqual(q({"limit":"50%"}), "with _l as (select total from orders), _ll as (select total from _l order by total asc limit (select round(count(*)*0.5) from _ll)) select total__into__ from _ll")
+        self.assertEqual(q({"limit":"50%"}), "with _l as (select total from orders), _ll as (select total from _l order by total asc limit (select round(count(*)*0.5) from _l)) select total__into__ from _ll")
 
     def test_percentage_agg(self):
         "query a percentage of records"
@@ -205,7 +205,7 @@ class Tests(unittest.TestCase):
         q.select("total", "sum", "total")
         q.tables("from orders")
         q.sortby('total')
-        self.assertEqual(q({"limit":"50%"}), "with _l as (select total as total from orders), _ll as (select total from _l order by total asc limit (select round(count(*)*0.5) from _ll)) select sum(total) as total__into__ from _ll")
+        self.assertEqual(q({"limit":"50%"}), "with _l as (select total as total from orders), _ll as (select total from _l order by total asc limit (select round(count(*)*0.5) from _l)) select sum(total) as total__into__ from _ll")
 
     def test_percentage_where(self):
         "query a percentage of records w/ where condition"
@@ -214,7 +214,7 @@ class Tests(unittest.TestCase):
         q.tables("from orders")
         q.where("total", "total > 10")
         q.sortby('total')
-        self.assertEqual(q({"limit":"10%"}), "with _l as (select total from orders where total > 10), _ll as (select total from _l order by total asc limit (select round(count(*)*0.1) from _ll)) select total__into__ from _ll")
+        self.assertEqual(q({"limit":"10%"}), "with _l as (select total from orders where total > 10), _ll as (select total from _l order by total asc limit (select round(count(*)*0.1) from _l)) select total__into__ from _ll")
 
     def test_where_arrangement(self):
         q = Query()

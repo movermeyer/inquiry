@@ -150,7 +150,7 @@ class Query(object):
             # column, agg, as, distinct
             # only AGG: peice 3: select sum(column) from _ll
             _l = Query()
-            _l._selects = dict(map(lambda d: (d[0], (d[1][0], d[1][1], d[1][2], None)), self._selects.items()))
+            _l._selects = dict(map(lambda d: (d[0], (d[1][2] or d[1][0], d[1][1], d[1][2], None)), self._selects.items()))
             _l.tables("from _ll")
 
             # only ORDER BY and LIMIT: peice 2
@@ -180,7 +180,7 @@ class Query(object):
 
             limit = validated.pop('limit')
             _l.with_(self(validated), "_l")
-            validated['limit'] = "(select round(count(*)*%s) from _ll)" % (float(limit[:-1])/100)
+            validated['limit'] = "(select round(count(*)*%s) from _l)" % (float(limit[:-1])/100)
             _l.with_(_ll(validated), "_ll")
             validated.pop('limit')
             return _l(validated)
@@ -205,7 +205,7 @@ class Query(object):
 
             elements["select"] = ', '.join(map(self._column, 
                                                sorted(self._selects.values(), 
-                                                      key=lambda a: (a[3], a[0]))))
+                                                      key=lambda a: (not a[3], a[0]))))
 
             # Into
             # ----

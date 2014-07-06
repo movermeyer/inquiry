@@ -46,6 +46,7 @@ class Results(object):
                       meta={"status": 200,
                             "total": len(results),
                             "speed": "%.fms" % self._speed})
+
         if self.period:
             result["time"] = {"start": str(self.period.start), 
                               "end": str(self.period.end)}

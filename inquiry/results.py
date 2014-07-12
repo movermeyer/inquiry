@@ -40,7 +40,7 @@ class Results(object):
         self.results
         return self
 
-    def json(self):
+    def json(self, debug=False):
         results = self.results
         result = dict(results=results,
                       meta={"status": 200,
@@ -48,8 +48,11 @@ class Results(object):
                             "speed": "%.fms" % self._speed})
 
         if self.period:
-            result["time"] = {"start": str(self.period.start), 
-                              "end": str(self.period.end)}
+            result["meta"]["time"] = {"start": str(self.period.start), 
+                                      "end": str(self.period.end)}
+
+        if debug:
+            result['meta']['query'] = self.pg()
 
         return dumps(result, default=json_defaults)
     

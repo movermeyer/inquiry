@@ -84,9 +84,18 @@ EXAMPLES = [
           "required": True
         }
       }
+    },
+    "/create": {
+      "query": "insert into _table (%(columns)s) values (%(values)s) returning _id"
+    },
+    "/update": {
+      "query": "update _table set %(updates)s where r=%(r)s"
     }
   },
   "arguments": {
+    "a": {
+      "validator": "string"
+    },
     "r": {
       "validator": "string",
       "required": True
@@ -120,12 +129,14 @@ class Tests(unittest.TestCase):
     def test_outline_nav_regexp(self):
         "outline - nav with regexp"
         self.assertEqual(self.q('a', 'count').pg(), "select count(o.*) as count from table where b > 10 and col_a = 'Hello'::text")
-        self.setUp()
+
+    def test_outline_nav_regexp_2(self):
         self.assertEqual(self.q('a', 'total').pg(), "select count(o.*) as count from table where b > 10 and col_a = 'Hello'::text")
 
     def test_outline_inheritance(self):
         self.assertRaisesRegexp(valideer.ValidationError, "missing required property: this", self.q, 'a', 'inherit')
-        self.setUp()
+
+    def test_outline_inheritance_2(self):
         self.assertEqual(self.q('a', 'inherit', this="apples", r="something").pg(), "select that, this from table inner join other using (this) where col_a = 'Hello'::text and r = 'something'")
 
     def test_default_arguments(self):
@@ -139,7 +150,8 @@ class Tests(unittest.TestCase):
     def test_arguments_option_regexp(self):
         "argument:options - keys are regexp"
         self.assertEqual(self.q('a', groupby="day").pg(),  "select column_day as day, value from table where b > 10 and col_a = 'Hello'::text group by day")
-        self.setUp()
+
+    def test_arguments_option_regexp_2(self):
         self.assertEqual(self.q('a', groupby="days").pg(), "select column_day as day, value from table where b > 10 and col_a = 'Hello'::text group by day")
 
     def test_arguments_seeds_ignore_str(self):
@@ -157,3 +169,9 @@ class Tests(unittest.TestCase):
     def test_argument_merge(self):
         "arguments - can merge"
         self.assertEqual(self.q('a', 'merge').pg(), "select c from table where b > 10 and col_a = 'Whats up!'::text")
+
+    def test_create(self):
+        self.assertEqual(self.q('b', 'create', a='Hello', r='world').pg(), "insert into _table (a, r) values ('Hello', 'world') returning _id")
+
+    def test_update(self):
+        self.assertEqual(self.q('b', 'update', a='value', r='pk').pg(), "update _table set a='value' where r='pk'")

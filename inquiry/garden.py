@@ -350,6 +350,10 @@ class Garden(object):
         query.sortby(*array(validated.get('sortby', [])))
 
         for seed in self.seeds:
+            # change query formatter
+            if seed.get('query'):
+                query.query(seed.get('query'))
+
             [query.with_(with_) for with_ in array(get(seed, 'with', []))]
             for column in array(get(seed, 'select', [])):
                 if type(column) is dict:

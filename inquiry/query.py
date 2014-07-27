@@ -1,16 +1,16 @@
 import re
 import valideer
 import itertools
-from copy import deepcopy
 
 from .helpers import unique
 
 
 class Query(object):
-    __slots__ = ("debug", "_with", "_selects", "_where", "_tables", "_groupby", "_sortby", "_aggs", "_into")
+    __slots__ = ("debug", "_with", "_selects", "_where", "_tables", "_groupby", "_sortby", "_aggs", "_into", "_query")
     escape = re.compile(r'\%(?!\()')
 
     def __init__(self, debug=False):
+        self._query = "%(with)sselect %(select)s%(into)s %(tables)s%(where)s%(groupby)s%(sortby)s%(limit)s%(offset)s"
         self.debug = debug
         self._with = []
         self._selects = {}
@@ -20,6 +20,9 @@ class Query(object):
         self._sortby = []
         self._aggs = []
         self._into = True
+
+    def query(self, query):
+        self._query = query
 
     def with_(self, _with, as_=None):
         if as_:
@@ -187,7 +190,7 @@ class Query(object):
 
         else:
 
-            query = "%(with)sselect %(select)s%(into)s %(tables)s%(where)s%(groupby)s%(sortby)s%(limit)s%(offset)s"
+            query = self._query
 
             elements = {}
 
@@ -206,6 +209,15 @@ class Query(object):
             elements["select"] = ', '.join(map(self._column, 
                                                sorted(self._selects.values(), 
                                                       key=lambda a: (not a[3], a[0]))))
+            
+            # used for insert queries
+            if '%(columns)s' in query:
+                elements['columns'] = ', '.join(validated.keys())
+                elements['values'] = ', '.join(map(lambda k: "%%(%s)s"%k, validated.keys()))
+            elif '%(updates)s' in query:
+                # used for update quries
+                elements['updates'] = ', '.join(["%s=%%(%s)s"%(k, k) for k in validated.keys() if "%%(%s)s"%k not in query])
+                elements.update(dict([(k,v) for k,v in validated.items() if "%%(%s)s"%k in query]))
 
             # Into
             # ----

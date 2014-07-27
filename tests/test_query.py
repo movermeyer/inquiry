@@ -20,6 +20,7 @@ class Tests(unittest.TestCase):
         q.tables("left join this using (that)", "from here")
         self.assertEqual("SELECT"+q({})[6:], "SELECT column_1, column_2__into__ from here left join this using (that)")
 
+    def test_resort_tables_2(self):
         q = Query()
         q.select("column_1")
         q.select("column_2")
@@ -36,6 +37,7 @@ class Tests(unittest.TestCase):
         q.tables("from here")
         self.assertEqual("SELECT"+q({})[6:], "SELECT column_1, column_2__into__ from here")
 
+    def test_filters_selects_2(self):
         q = Query()
         q.select("column_1")
         q.select("column_2")
@@ -124,6 +126,7 @@ class Tests(unittest.TestCase):
         q.tables("from here")
         self.assertEqual("SELECT"+q({})[6:], "SELECT store, total__into__ from here where total > 50")
 
+    def test_agg_filter_2(self):
         q = Query()
         q.select("total")
         q.select("store")

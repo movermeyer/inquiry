@@ -34,8 +34,7 @@ EXAMPLES = [
       },
       "/inherit": {
         "inherit": "b/other",
-        "select": "that",
-        "where": ["r = %(r)s"]
+        "select": "that"
       },
       "arguments": {
         "&agg": {
@@ -89,16 +88,22 @@ EXAMPLES = [
       "query": "insert into _table (%(columns)s) values (%(values)s) returning _id"
     },
     "/update": {
-      "query": "update _table set %(updates)s where r=%(r)s"
+      "query": "update _table set %(updates)s where %(id)s"
     }
   },
   "arguments": {
-    "a": {
-      "validator": "string"
+    "a[]": {
+      "validator": "integer",
+      "column": "a::int"
     },
     "r": {
       "validator": "string",
+      "column": "r::text",
       "required": True
+    },
+    "id[]": {
+      "validator": "integer",
+      "column": "id::int"
     }
   }
 }]
@@ -137,7 +142,7 @@ class Tests(unittest.TestCase):
         self.assertRaisesRegexp(valideer.ValidationError, "missing required property: this", self.q, 'a', 'inherit')
 
     def test_outline_inheritance_2(self):
-        self.assertEqual(self.q('a', 'inherit', this="apples", r="something").pg(), "select that, this from table inner join other using (this) where col_a = 'Hello'::text and r = 'something'")
+        self.assertEqual(self.q('a', 'inherit', this="apples", r="something").pg(), "select that, this from table inner join other using (this) where r = 'something'::text")
 
     def test_default_arguments(self):
         "argument - `default`"
@@ -171,7 +176,15 @@ class Tests(unittest.TestCase):
         self.assertEqual(self.q('a', 'merge').pg(), "select c from table where b > 10 and col_a = 'Whats up!'::text")
 
     def test_create(self):
-        self.assertEqual(self.q('b', 'create', a='Hello', r='world').pg(), "insert into _table (a, r) values ('Hello', 'world') returning _id")
+        self.assertEqual(self.q('b', 'create', a=1, r='world').pg(), "insert into _table (a, r) values (1, 'world') returning _id")
 
     def test_update(self):
-        self.assertEqual(self.q('b', 'update', a='value', r='pk').pg(), "update _table set a='value' where r='pk'")
+        self.assertEqual(self.q('b', 'update', id=10, r='something').pg(), "update _table set r='something' where id=10")
+
+    def test_update_many(self):
+        self.skipTest("wip")
+        self.assertEqual(self.q('b', 'update', id=[4,50], r='something').pg(), "update _table set r='something' where ARRAY[id] @> ARRAY[4, 50]")
+
+    def test_update_many_more(self):
+        self.skipTest("wip")
+        self.assertEqual(self.q('b', 'update', a=5, r='something', id=[5, 6]).pg(), "update _table set a=5, r='something' where array[id] @> ARRAY[5, 6]")

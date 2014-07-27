@@ -448,15 +448,6 @@ class Garden(object):
             query.tables(*array(get(seed, 'table', [])))
             query.groupby(*array(get(seed, 'groupby', [])))
             query.sortby(*array(get(seed, 'sortby', [])))
-        
-        # ------------------
-        # Fill In the Blanks
-        # ------------------
-        for key in self.arguments:
-            if key.endswith('[]'):
-                key = key[:-2]
-            if key not in validated:
-                validated[key] = ""
 
         return query(validated)
     

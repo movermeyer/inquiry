@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 def unique(lst):
     """Unique with keeping sort/order 
         ["a", "c", "b", "c", "c", ["d", "e"]]
@@ -41,6 +43,7 @@ def merge(d1, d2):
           "steve": [10, 11]
         }
     """
+    d1, d2 = deepcopy(d1), deepcopy(d2)
     if d1 == {} or type(d1) is not dict:
         return _merge_fix(d2)
 

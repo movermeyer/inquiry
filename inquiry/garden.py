@@ -216,12 +216,12 @@ class Garden(object):
                     # need to remove the operator for validating
                     new_values = []
                     for v in value:
-                        operator, v = self._operator(v, *seed.get('column', "").split('::'))
+                        operator, v = self._operator(v, *seed.get('column', "").rsplit("::", 1))
                         new_values.append(v)
                         operators[key].append((agg, operator) if agg else operator)
                     userkwargs[key] = new_values
                 else:
-                    operator, value = self._operator(value, *seed.get('column', "").split('::'))
+                    operator, value = self._operator(value, *seed.get('column', "").rsplit("::", 1))
                     operators[key] = (agg, operator) if agg else operator
                     userkwargs[key] = value
 
@@ -368,7 +368,7 @@ class Garden(object):
                 # if "id" not in operators then it is is likely found 
                 #   in the "WHERE" arguments as task only feature.
                 # operators add the query on its own
-                column, datatype = tuple(seed['column'].split('::'))
+                column, datatype = tuple(seed['column'].rsplit("::", 1))
                 is_array = str(datatype).endswith('[]')
                 if is_array:
                     datatype = datatype[:-2]
@@ -425,6 +425,12 @@ class Garden(object):
                                       type=datatype)
                     query.where(seed['id'], "not("+w+")" if ops=='!' else w)
 
+                # -------
+                # Boolean
+                # -------
+                elif datatype == 'boolean':
+                    query.where(seed['id'], "%(column)s is %%(%(id)s)s" % dict(column=column, id=seed['id']))
+
                 # ---
                 # "="
                 # ---
@@ -449,6 +455,26 @@ class Garden(object):
             query.groupby(*array(get(seed, 'groupby', [])))
             query.sortby(*array(get(seed, 'sortby', [])))
 
+
+        # used for insert queries
+        if '%(columns)s' in query._query:
+            query._query = query._query.replace('%(columns)s', ', '.join(validated.keys()))
+            query._query = query._query.replace('%(values)s', ', '.join(map(lambda k: "%%(%s)s"%k, validated.keys())))
+        elif '%(updates)s' in query._query:
+            # used for update quries
+            updates = []
+            for key, value in validated.items():
+                if key in self.arguments:
+                    column, dt = tuple(self.arguments[key]['column'].rsplit("::", 1))
+                    _column = "".join((column, '=%(', key, ')s::', dt))
+                    # validated["_"+key] = value
+                    if ("%%(%s)s" % key) in query._query:
+                        query._query = query._query.replace(("%%(%s)s" % key), _column)
+                        # validated[key] = _column
+                    else:
+                        updates.append(_column)
+            query._query = query._query.replace('%(updates)s', ", ".join(updates))
+
         return query(validated)
     
     def _inherit(self, *paths):
@@ -467,19 +493,10 @@ class Garden(object):
                 self.arguments.update(garden.arguments)
 
     def _operator(self, value, column=None, datatype=None):
-        #                      [found in column seed in "column" key  ]
-        # ex. orders.json[arguments][subtotal][column] = ['subtotal', 'numeric', '=']
-        # if datatype in ('numeric', 'int'):
-        #     for key in validators.Aggregate.ALIAS.keys():
-        #         if str(value).startswith(key):
-        #             agg = [key]
-        #             o, value = self._operator(str(value)[len(key):], column, datatype)
-        #             agg.append(o)
-        #             # ex. (('avg', '>'), 10)
-        #             return (tuple(agg), value)
-
+        # http://www.postgresql.org/docs/9.3/static/datatype.html#DATATYPE-TABLE
         ops = {"text":('!', '~'),
                "numeric":('<', '<=', '>', '>=', '!'),
+               "float8":('<', '<=', '>', '>=', '!'),
                "int":('<', '<=', '>', '>=', '!')}.get(datatype, ('!'))
         for o in ops:
             if str(value).startswith(o):
@@ -493,7 +510,9 @@ class Garden(object):
         # inherit any other figures
         self._inherit(*array(get(seed, 'inherit', [])))
         # merge the seed arguments
-        if 'arguments' in seed:
-            self.arguments = merge(self.arguments, seed.pop('arguments'))
+        if '&arguments' in seed:
+            self.arguments = merge(self.arguments, seed.pop('&arguments'))
+        elif 'arguments' in seed:
+            self.arguments = seed.pop('arguments')
         # append the seed
         self.seeds.append(seed)

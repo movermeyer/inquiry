@@ -209,59 +209,42 @@ class Query(object):
             # ----
             elements['into'] = "__into__" if self._into else ""
 
-            # used for insert queries
-            if '%(columns)s' in query:
-                elements['columns'] = ', '.join(validated.keys())
-                elements['values'] = ', '.join(map(lambda k: "%%(%s)s"%k, validated.keys()))
-            elif '%(updates)s' in query:
-                # used for update quries
-                print elements, validated
-                elements['updates'] = []
-                for key, value in validated.items():
-                    ks = "%%(%s)s" % key
-                    if ks in query:
-                        # support to multi key need to happen here
-                        elements[key] = "".join((key, '=', ks))
-                    else:
-                        elements['updates'].append("".join((key, "=", ks)))
-                elements['updates'] = ", ".join(elements['updates'])
-            else:
-                # Tables
-                # ------
-                _from = None
-                for table in self._tables:
-                    if table.startswith('from'):
-                        _from = table
-                if _from is None:
-                    raise valideer.ValidationError("Not enough arguments supplied to formulate a tables for query")
+            # Tables
+            # ------
+            _from = None
+            for table in self._tables:
+                if table.startswith('from'):
+                    _from = table
+            if _from is None:
+                raise valideer.ValidationError("Not enough arguments supplied to formulate a tables for query")
 
-                newtables = self._tables[self._tables.index(_from):]
-                oldtables = self._tables[:self._tables.index(_from)]
-                newtables.extend([t for t in oldtables if not t.startswith('from')])
-                self._tables = unique(newtables)
-                elements["tables"] = " ".join(self._tables)
+            newtables = self._tables[self._tables.index(_from):]
+            oldtables = self._tables[:self._tables.index(_from)]
+            newtables.extend([t for t in oldtables if not t.startswith('from')])
+            self._tables = unique(newtables)
+            elements["tables"] = " ".join(self._tables)
 
-                # Group By
-                # --------
-                elements['groupby'] = (" group by " + ','.join(map(lambda g: ('"%s"'%g) if g == 'group' else g,
-                                                                   self._groupby))) if self._groupby else ""
+            # Group By
+            # --------
+            elements['groupby'] = (" group by " + ','.join(map(lambda g: ('"%s"'%g) if g == 'group' else g,
+                                                               self._groupby))) if self._groupby else ""
 
-                # Sort By
-                # -------
-                # http://www.postgresql.org/docs/8.1/static/queries-order.html
-                #   Each column specification may be followed by an optional ASC or DESC to set the sort direction to ascending or descending. 
-                #   ASC order is the default
-                elements['sortby'] = (" order by %s %s" % (",".join(self._sortby), validated.get('dir', 'asc'))) if self._sortby else ""
+            # Sort By
+            # -------
+            # http://www.postgresql.org/docs/8.1/static/queries-order.html
+            #   Each column specification may be followed by an optional ASC or DESC to set the sort direction to ascending or descending. 
+            #   ASC order is the default
+            elements['sortby'] = (" order by %s %s" % (",".join(self._sortby), validated.get('dir', 'asc'))) if self._sortby else ""
 
-                # Limit
-                # -----
-                limit = validated.get('limit')
+            # Limit
+            # -----
+            limit = validated.get('limit')
 
-                elements['limit'] = (" limit %s" % validated['limit']) if limit else ""
+            elements['limit'] = (" limit %s" % validated['limit']) if limit else ""
 
-                # Offset
-                # ------
-                elements['offset'] = (" offset %s" % validated['offset']) if validated.get('offset') else ""
+            # Offset
+            # ------
+            elements['offset'] = (" offset %s" % validated['offset']) if validated.get('offset') else ""
 
             # Where
             # -----
@@ -284,9 +267,15 @@ class Query(object):
             # Format SQL
             # ----------
             try:
-                return (query % elements) % validated
-            except ValueError:
-                return (self.escape.sub('%%', query) % elements) % validated
+                try:
+                    return (query % elements) % validated
+                except ValueError:
+                    return (self.escape.sub('%%', query) % elements) % validated
+                except KeyError:
+                    return query % validated
+            except:
+                raise SyntaxError("failed to create query")
+
 
     def _column(self, peices):
         col, agg, _as, distinct = peices

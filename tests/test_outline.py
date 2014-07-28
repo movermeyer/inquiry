@@ -17,7 +17,7 @@ EXAMPLES = [
     },
     "/merge": {
       "select": "c",
-      "arguments": {
+      "&arguments": {
         "&a[]": {
           "default": "Whats up!"
         }
@@ -36,7 +36,7 @@ EXAMPLES = [
         "inherit": "b/other",
         "select": "that"
       },
-      "arguments": {
+      "&arguments": {
         "&agg": {
           "&default": "sum"
         }
@@ -77,7 +77,7 @@ EXAMPLES = [
     "/other": {
       "tables": ["inner join other using (this)"],
       "select": "this",
-      "arguments": {
+      "&arguments": {
         "this": {
           "validator": "string",
           "required": True
@@ -88,7 +88,7 @@ EXAMPLES = [
       "query": "insert into _table (%(columns)s) values (%(values)s) returning _id"
     },
     "/update": {
-      "query": "update _table set %(updates)s where %(id)s"
+      "query": "update _table set %(updates)s where id=%(id)s::int"
     }
   },
   "arguments": {
@@ -179,7 +179,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(self.q('b', 'create', a=1, r='world').pg(), "insert into _table (a, r) values (1, 'world') returning _id")
 
     def test_update(self):
-        self.assertEqual(self.q('b', 'update', id=10, r='something').pg(), "update _table set r='something' where id=10")
+        self.assertEqual(self.q('b', 'update', id=10, r='something').pg(), "update _table set r='something'::text where id=10::int")
 
     def test_update_many(self):
         self.skipTest("wip")

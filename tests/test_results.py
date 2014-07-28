@@ -24,7 +24,7 @@ EXAMPLES = [
       "/totals?": {
         "select": "%(agg)s(o.total) total"
       },
-      "arguments": {
+      "&arguments": {
         "agg": {
           "adapt": False,
           "default": "sum",
@@ -83,7 +83,6 @@ class Tests(unittest.TestCase):
         "cannot compare when there are many results"
         self.skipTest("wip")
         result = self.q("orders", due="0")
-        print result, result > 0
         self.assertRaises(TypeError, lambda: result > 10)
         raise Exception("Hello")
 

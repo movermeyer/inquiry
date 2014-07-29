@@ -134,7 +134,7 @@ class Garden(object):
             # --------------
             # Argument Alias
             # --------------
-            if seed.get('alias'):
+            if seed.get('alias') and key in userkwargs:
                 # pop the value form the user kwargs (to change the key later)
                 value = userkwargs.pop(key) if key in userkwargs else NotImplemented
                 # for duplicate keys

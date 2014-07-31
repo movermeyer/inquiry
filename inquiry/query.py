@@ -64,7 +64,7 @@ class Query(object):
         self._into = bool
 
     def where(self, column, *where):
-        self._where.setdefault(column, []).extend(list(where))
+        self._where.setdefault(column, []).extend(list(filter(lambda w: w, where)))
 
     def groupby(self, *groupby):
         for g in groupby:
@@ -267,11 +267,13 @@ class Query(object):
             # Format SQL
             # ----------
             try:
+                # return (query % elements) % validated
                 try:
                     return (query % elements) % validated
-                except ValueError:
-                    return (self.escape.sub('%%', query) % elements) % validated
+                # except ValueError:
+                #     return (self.escape.sub('%%', query) % elements) % validated
                 except KeyError:
+                    print "\033[94m@format\033[0m", query, elements, validated
                     validated.update(elements)
                     return ((query % validated) % validated) % validated
             except Exception as e:

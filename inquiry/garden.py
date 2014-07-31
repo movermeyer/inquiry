@@ -130,7 +130,7 @@ class Garden(object):
         # -----------------
         # Process Arguments
         # -----------------
-        for key, seed in self.arguments.items():
+        for key, seed in self.arguments.iteritems():
             # --------------
             # Argument Alias
             # --------------
@@ -157,7 +157,12 @@ class Garden(object):
                 multi = False
 
             # get value(s) from user
-            value = userkwargs.pop(key) if key in userkwargs else seed.get('default')
+            if key in userkwargs:
+                value = userkwargs.pop(key)
+            elif seed.get('copy'):
+                value = userkwargs.get(seed.get('copy'))
+            else:
+                value = seed.get('default')
 
             # no argument provided, lets continue)
             if value is None or value == []:
@@ -334,11 +339,11 @@ class Garden(object):
         # ----------------
         # Format Arguments
         # ----------------
-        for key in validated:
+        for key, value in validated.iteritems():
             rk = key.split('_')[1] if key.find('_')>-1 else key
             seed = self.arguments.get(rk, self.arguments.get(rk+'[]'))
             if seed and seed.get('format'):
-                validated[key] = seed['format'] % validated
+                validated[key] = seed['format'] % value
 
         # --------------------
         # Build Query Elements
@@ -389,7 +394,7 @@ class Garden(object):
                                        operator={"=":"@>","!":"@>"}.get(ops[0], ops[0]),
                                        id=seed['id'],
                                        type=datatype)
-                        query.where(seed['id'], "not("+w+")" if ops[0]=='!' else w)
+                        where = "not("+w+")" if ops[0]=='!' else w
 
                     # ----------
                     # ["!", "="]
@@ -405,10 +410,10 @@ class Garden(object):
                     # need to select that data for sorting/where
                     query.select(column, ops[0], seed['id'])
                     query.agg(seed['id'])
-                    query.where(seed['id'], "%(id)s %(operator)s %%(%(id)s)s::%(type)s" % \
-                                            dict(operator={"~":"@@","!":"!="}.get(ops[1], ops[1]),
-                                                 id=seed['id'],
-                                                 type=datatype))
+                    where = "%(id)s %(operator)s %%(%(id)s)s::%(type)s" % \
+                            dict(operator={"~":"@@","!":"!="}.get(ops[1], ops[1]),
+                                 id=seed['id'],
+                                 type=datatype)
                
                 # -----------
                 # "=" (array)
@@ -421,13 +426,13 @@ class Garden(object):
                                       operator={"=":"@>","!":"@>"}.get(ops, ops),
                                       id=seed['id'],
                                       type=datatype)
-                    query.where(seed['id'], "not("+w+")" if ops=='!' else w)
+                    where = "not("+w+")" if ops=='!' else w
 
                 # -------
                 # Boolean
                 # -------
                 elif datatype == 'boolean':
-                    query.where(seed['id'], "%(column)s is %%(%(id)s)s" % dict(column=column, id=seed['id']))
+                    where = "%(column)s is %%(%(id)s)s" % dict(column=column, id=seed['id'])
 
                 # ---
                 # "="
@@ -435,29 +440,40 @@ class Garden(object):
                 else:
                     """The column is NOT an array
                     """
-                    query.where(seed['id'], "%(column)s %(operator)s %%(%(id)s)s::%(type)s" % \
-                                            dict(column=column,
-                                                 operator={"~":"@@","!":"!="}.get(ops, ops),
-                                                 id=seed['id'],
-                                                 type=datatype))
+                    where = "%(column)s %(operator)s %%(%(id)s)s::%(type)s" % \
+                            dict(column=column,
+                                 operator={"~":"@@","!":"!="}.get(ops, ops),
+                                 id=seed['id'],
+                                 type=datatype)
+
+                if seed.get('format-after'):
+                    where = seed.get('format-after') % where
+
+                if seed.get('where') is not False:
+                    query.where(seed.get('id'), where)
+                
+                if seed.get('id'):
+                    validated["where_%s"%seed['id']] = where
 
             else:
                 ops = operators.get(seed.get('id', None))
-                # not()
                 if ops and (type(ops) is list and '!' in ops) or ops == '!':
                     query.where(seed['id'], *[("not(%s)" % w) for w in array(get(seed, 'where', []))])
                 else:
                     query.where(seed.get('id'), *array(get(seed, 'where', [])))
 
+
             query.tables(*array(get(seed, 'table', [])))
             query.groupby(*array(get(seed, 'groupby', [])))
             query.sortby(*array(get(seed, 'sortby', [])))
 
+        # / end foreach seed
 
         # used for insert queries
         if '%(columns)s' in query._query:
-            query._query = query._query.replace('%(columns)s', ', '.join(validated.keys()))
-            query._query = query._query.replace('%(values)s', ', '.join(map(lambda k: "%%(%s)s"%k, validated.keys())))
+            filtered = filter(lambda k: not k.startswith('where_'), validated.keys())
+            query._query = query._query.replace('%(columns)s', ', '.join(filtered))
+            query._query = query._query.replace('%(values)s', ', '.join(map(lambda k: "%%(%s)s"%k, filtered)))
         elif '%(updates)s' in query._query:
             # used for update quries
             updates = []
@@ -472,8 +488,6 @@ class Garden(object):
                     else:
                         updates.append(_column)
             query._query = query._query.replace('%(updates)s', ", ".join(updates))
-
-        validated.update(dict([("where_%s"%key, value[0] if value else "") for key, value in query._where.items()]))
 
         return query(validated)
     

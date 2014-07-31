@@ -213,7 +213,7 @@ class Query(object):
             # ------
             _from = None
             for table in self._tables:
-                if table.startswith('from'):
+                if table.startswith('from') or table == "":
                     _from = table
             if _from is None:
                 raise valideer.ValidationError("Not enough arguments supplied to formulate a tables for query")
@@ -272,9 +272,10 @@ class Query(object):
                 except ValueError:
                     return (self.escape.sub('%%', query) % elements) % validated
                 except KeyError:
-                    return query % validated
-            except:
-                raise SyntaxError("failed to create query")
+                    validated.update(elements)
+                    return ((query % validated) % validated) % validated
+            except Exception as e:
+                raise# SyntaxError("failed to create query", e)
 
 
     def _column(self, peices):

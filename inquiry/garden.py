@@ -199,7 +199,7 @@ class Garden(object):
                 [userkwargs.pop(k) for k in ignore]
             if found and not get(seed, 'silent'):
                 raise valideer.ValidationError("additional properties: %s" % ",".join(found), found)
-                
+            
         # -------------------------
         # Custom Operators (part 1)
         # -------------------------
@@ -243,6 +243,7 @@ class Garden(object):
         # --------
         parser = valideer.parse(parser, additional_properties=False)
         validated = parser.validate(userkwargs, adapt=self.navigator.adapter())
+        validated.update(self.network_kwargs)
         #   operators                   validated
         # --------------------------- | --------------------------------
         # {                           {
@@ -265,15 +266,6 @@ class Garden(object):
         if multi and type(value) not in (list, tuple):
             multi = False
 
-        # ------------------------
-        # Seedlings ending in "[]"
-        #  are for multi args only
-        # ------------------------
-        if not multi:
-            [seed.pop(_k) for _k in seed.keys() if _k in self._seed_titles and _k.endswith('[]')]
-        else:
-            [seed.pop(_k) for _k in seed.keys() if _k in self._seed_titles and not _k.endswith('[]')]
-                
         # plant this arguments seed
         key = key if not agg else ("%s_%s" % (agg, key))
         seed["id"] = key
@@ -289,26 +281,32 @@ class Garden(object):
         # validation methods
         # 1) choose
         if 'options' in seed:
-            found = False
-            for pattern in seed['options']:
-                if re.match(pattern, value):
-                    found = True
-                    seed = seed['options'][pattern]
+            replace_with = []
+            for _value in array(value):
+                found = False
+                for pattern in seed['options']:
+                    if re.match(pattern, _value):
+                        found = True
+                        _seed = seed['options'][pattern]
 
-                    # replace the value provided
-                    if 'value' in seed:
-                        value = seed['value']
+                        # replace the value provided
+                        replace_with.append(_seed.get('value', _value))
 
-                    # add the seed
-                    self.plant(seed)
+                        # add the seed
+                        self.plant(_seed)
 
-                    # add the parser, though we have already parsed properly
-                    validate = valideer.String()
-                    break
+                        # add the parser, though we have already parsed properly
+                        break
 
-            # no seed found: invalid
-            if not found:
-                raise valideer.ValidationError("Invalid value", key)
+                # no seed found: invalid
+                if not found: raise valideer.ValidationError("Invalid value", key)
+            
+            if type(value) in (list, tuple):
+                value = replace_with
+                validate = valideer.HomogeneousSequence(valideer.String())
+            else:
+                value = replace_with[0]
+                validate = valideer.String()
 
         elif 'validator' in seed:
             validator = seed.get('validator')
@@ -330,7 +328,7 @@ class Garden(object):
             # yes, adapt me
             rk = key.split('_')[1] if key.find('_')>-1 else key
             seed = self.arguments.get(rk, self.arguments.get(rk+'[]'))
-            if seed.get('adapt', True):
+            if seed and seed.get('adapt', True):
                 validated[key] = self.navigator.adapt(validated[key])
 
         # ----------------
@@ -339,7 +337,7 @@ class Garden(object):
         for key in validated:
             rk = key.split('_')[1] if key.find('_')>-1 else key
             seed = self.arguments.get(rk, self.arguments.get(rk+'[]'))
-            if seed.get('format'):
+            if seed and seed.get('format'):
                 validated[key] = seed['format'] % validated
 
         # --------------------
@@ -474,6 +472,8 @@ class Garden(object):
                     else:
                         updates.append(_column)
             query._query = query._query.replace('%(updates)s', ", ".join(updates))
+
+        validated.update(dict([("where_%s"%key, value[0] if value else "") for key, value in query._where.items()]))
 
         return query(validated)
     

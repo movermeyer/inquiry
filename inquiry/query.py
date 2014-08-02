@@ -273,7 +273,6 @@ class Query(object):
                 # except ValueError:
                 #     return (self.escape.sub('%%', query) % elements) % validated
                 except KeyError:
-                    print "\033[94m@format\033[0m", query, elements, validated
                     validated.update(elements)
                     return ((query % validated) % validated) % validated
             except Exception as e:

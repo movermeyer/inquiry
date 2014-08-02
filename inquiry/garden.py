@@ -287,30 +287,33 @@ class Garden(object):
         # 1) choose
         if 'options' in seed:
             replace_with = []
-            for _value in array(value):
-                found = False
-                for pattern in seed['options']:
-                    if re.match(pattern, _value):
-                        found = True
-                        _seed = seed['options'][pattern]
+            if seed.get('*') and value in ('*', 'all'):
+                map(self.plant, seed['options'].values())
 
-                        # replace the value provided
-                        replace_with.append(_seed.get('value', _value))
+            else:
+                for _value in array(value):
+                    found = False
+                    for pattern, _seed in seed['options'].iteritems():
+                        if re.match(pattern, _value):
+                            found = True
 
-                        # add the seed
-                        self.plant(_seed)
+                            # replace the value provided
+                            replace_with.append(_seed.get('value', _value))
 
-                        # add the parser, though we have already parsed properly
-                        break
+                            # add the seed
+                            self.plant(_seed)
 
-                # no seed found: invalid
-                if not found: raise valideer.ValidationError("Invalid value", key)
+                            # add the parser, though we have already parsed properly
+                            break
+
+                    # no seed found: invalid
+                    if not found: raise valideer.ValidationError("Invalid value", key)
             
             if type(value) in (list, tuple):
                 value = replace_with
                 validate = valideer.HomogeneousSequence(valideer.String())
             else:
-                value = replace_with[0]
+                value = replace_with[0] if replace_with else ""
                 validate = valideer.String()
 
         elif 'validator' in seed:

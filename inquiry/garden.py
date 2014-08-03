@@ -234,7 +234,6 @@ class Garden(object):
             seed = self.arguments.get(userkwargs['sortby'].lower(), self.arguments.get(userkwargs['sortby'].lower()+'[]'))
             if seed:
                 seed['id'] = str(userkwargs['sortby'].lower())
-                self.plant(seed)
 
         for r in set(requires):
             if userkwargs.get(r) is None:

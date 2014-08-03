@@ -194,17 +194,14 @@ class Garden(object):
         # ------------
         # Ignored Keys
         # ------------
-        all_keys = set(userkwargs.keys())
         for seed in self.seeds:
             ignores = set(array(get(seed, 'ignore')))
-            found = ignores & original_kwargs
-            ignore = ignores & all_keys
-            if ignore or found:
-                # default arguments to ignore
-                [userkwargs.pop(k) for k in ignore]
-            if found and not get(seed, 'silent'):
-                raise valideer.ValidationError("additional properties: %s" % ",".join(found), found)
-            
+            if ignores:
+                if ignores & original_kwargs:
+                    additionals = ignores & original_kwargs
+                    raise valideer.ValidationError("additional properties: %s" % ",".join(additionals), additionals)
+                [userkwargs.pop(key) for key in ignores if key in userkwargs]
+
         # -------------------------
         # Custom Operators (part 1)
         # -------------------------

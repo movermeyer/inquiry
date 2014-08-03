@@ -85,10 +85,8 @@ class Garden(object):
         """Applys seeds and arguments
         to the garden for use during the harvest
         """
-        for seed in seeds:
-            self._clean(seed)
-        if arguments:
-            self.network_kwargs.update(arguments)
+        map(self._clean, seeds)
+        self.network_kwargs.update(arguments)
 
     def harvest(self, userkwargs):
         operators, validated = self._harvest_validate(userkwargs)

@@ -350,6 +350,10 @@ class Garden(object):
         query.sortby(*array(validated.get('sortby', [])))
 
         for seed in self.seeds:
+            if seed.get('id') and seed['id'] not in validated:
+                # seed should be ignored
+                continue
+
             # change query formatter
             if seed.get('query'):
                 query.query(seed.get('query'))

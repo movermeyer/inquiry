@@ -449,8 +449,8 @@ class Garden(object):
                     where = seed.get('format-after') % where
 
                 if seed.get('where') is not False:
-                    query.where(seed.get('id'), where)
-                
+                    query.where(seed.get('id'), where, *array(seed.get('where')))
+
                 if seed.get('id'):
                     validated["where_%s"%seed['id']] = where
 

@@ -3,7 +3,6 @@ notifications:
   email: false
 env:
   global:
-    - secure: gY09YSq+4lFzAByBmuQhlNpgPF25+kBMCczfiX4CjG4LSNMtNp4QnyL+g6eF\ndobY6ielUBBdX3wioLAP12VawVciCfxfDLxVGACU5wrpoqNyA2NSfHEifC9t\nsuMzkHETJiZU6ZfaD/CFmdAA3Xf0jiXFK80m/xAlRnY+DyWHSLQ=
     - PSQL=postgres://postgres:@localhost:5432/inquiry
 services: postgres
 python:

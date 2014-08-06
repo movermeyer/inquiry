@@ -29,3 +29,5 @@ __pycache__
 venv
 .coverage
 coverage_html_report
+htmlcov
+coverage.xml

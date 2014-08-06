@@ -16,8 +16,7 @@ install:
   - psql -c 'create database inquiry;' -U postgres
   - psql inquiry -f tests/demo.sql
 script:
-  - coverage run -m unittest discover -s tests
-  - coverage xml
+  coverage run -m unittest discover -s tests
 after_success:
   - coveralls
   - codecov

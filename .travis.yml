@@ -10,7 +10,8 @@ python:
   - 2.7
 install:
   - python setup.py install
-  - pip install coveralls codecov
+  - pip install coveralls
+  - pip install git+git://github.com/codecov/codecov-python.git
   - pip install git+git://github.com/stevepeak/tornpsql.git
   - psql -c 'create database inquiry;' -U postgres
   - psql inquiry -f tests/demo.sql

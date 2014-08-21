@@ -4,7 +4,6 @@ notifications:
 env:
   global:
     - PSQL=postgres://postgres:@localhost:5432/inquiry
-services: postgres
 python:
   - 2.7
 install:

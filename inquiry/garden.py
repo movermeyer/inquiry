@@ -196,8 +196,9 @@ class Garden(object):
             ignores = set(array(get(seed, 'ignore')))
             if ignores:
                 if ignores & original_kwargs:
-                    additionals = ignores & original_kwargs
-                    raise valideer.ValidationError("additional properties: %s" % ",".join(additionals), additionals)
+                    if not get(seed, 'silent'):
+                        additionals = ignores & original_kwargs
+                        raise valideer.ValidationError("additional properties: %s" % ",".join(additionals), additionals)
                 [userkwargs.pop(key) for key in ignores if key in userkwargs]
 
         # -------------------------

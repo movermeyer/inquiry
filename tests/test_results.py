@@ -59,7 +59,7 @@ EXAMPLES = [
 class Data(Inquiry):
     def __init__(self, *a, **k):
         Inquiry.__init__(self, *a, **k)
-        self.db = tornpsql.Connection(os.getenv("PSQL"))
+        self.db = tornpsql.Connection(os.getenv("PSQL", "postgres://peak:@localhost:5432/inquiry"))
 
     def query(self, query, *extra):
         return self.db.query(query)

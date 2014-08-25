@@ -1,4 +1,4 @@
-inquiry [![Build Status](https://secure.travis-ci.org/stevepeak/inquiry.png)](http://travis-ci.org/stevepeak/inquiry) [![Version](https://pypip.in/v/inquiry/badge.png)](https://github.com/stevepeak/inquiry) [![codecov.io](https://codecov.io/github/stevepeak/inquiry.png)](https://codecov.io/github/stevepeak/inquiry)
+inquiry [![Build Status](https://secure.travis-ci.org/orderbliss/inquiry.png)](http://travis-ci.org/orderbliss/inquiry) [![Version](https://pypip.in/v/inquiry/badge.png)](https://github.com/orderbliss/inquiry) [![codecov.io](https://codecov.io/github/orderbliss/inquiry.png)](https://codecov.io/github/orderbliss/inquiry)
 -------
 
 `pip install inquiry`

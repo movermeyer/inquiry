@@ -8,12 +8,10 @@ python:
   - 2.7
 install:
   - python setup.py install
-  - pip install coverage
-  - pip install git+git://github.com/codecov/codecov-python.git
-  - pip install git+git://github.com/stevepeak/tornpsql.git
+  - pip install -r tests/requirements.txt
   - psql -c 'create database inquiry;' -U postgres
   - psql inquiry -f tests/demo.sql
 script:
-  coverage run -m unittest discover -s tests
+  nosetests --rednose --with-cov --cov-config=.coveragerc
 after_success:
   codecov

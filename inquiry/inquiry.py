@@ -32,7 +32,7 @@ class Inquiry(object):
         """
         pass
 
-    def format(self, key, value):
+    def format(self, key, value, *_):
         """Format the returned results as they are yielded
         """
         return value
@@ -51,6 +51,9 @@ class Inquiry(object):
         """:args and :kwargs are passed through the figure
         """
         return Navigator(self, args)
+
+    def make(self, *args, **kwargs):
+        return Navigator(self)(*args, **kwargs)
 
     def clear(self):
         global FIGURES

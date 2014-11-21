@@ -2,4 +2,4 @@ nose
 rednose
 nose-cov
 codecov
-git+git://github.com/stevepeak/tornpsql.git
+tornpsql

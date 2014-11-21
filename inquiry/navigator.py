@@ -5,9 +5,9 @@ class Navigator(object):
     __slots__ = ("inquiry", "paths", "figure", "extra_data")
     path = re.compile(r"([a-z]{1,25}|\d+|\+)")
 
-    def __init__(self, inquiry, extra_data):
+    def __init__(self, inquiry, extra_data=None):
         self.inquiry = inquiry
-        self.extra_data = extra_data
+        self.extra_data = extra_data or []
         self.figure = None
         self.paths = []
 

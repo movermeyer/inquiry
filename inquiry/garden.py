@@ -35,7 +35,8 @@ class Garden(object):
         # plant the seeds along the way
         if len(paths) == 0:
             # using the index
-            self.plant(figure.outline['index'])
+            if figure.outline.get('index'):
+                self.plant(figure.outline['index'])
         else:
             # start on the figure outline
             lvl = figure.outline
@@ -528,6 +529,7 @@ class Garden(object):
         # merge the seed arguments
         if '&arguments' in seed:
             self.arguments = merge(self.arguments, seed.pop('&arguments'))
+
         elif 'arguments' in seed:
             self.arguments = seed.pop('arguments')
         # append the seed

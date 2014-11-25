@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from .helpers import *
 from .garden import Garden
 from .results import Results
@@ -8,6 +10,7 @@ class Figure(object):
 
     def __init__(self, id, figure):
         self.id = id
+        figure = deepcopy(figure)
         self.title = figure.pop('title') if 'title' in figure else None
         self.help = figure.pop('help') if 'help' in figure else None
         self.outline = figure.pop('outline')

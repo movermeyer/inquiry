@@ -1,8 +1,8 @@
 import re
-import valideer
+from valideer import *
 
 
-class where(valideer.Pattern):
+class where(Pattern):
     name = "where"
     regexp = re.compile(r"[\w&<>|*/\+\-\(\)]+")
     rp = re.compile(r"(\w+)")
@@ -16,7 +16,7 @@ class where(valideer.Pattern):
         return keys, '('+value+')'
 
 
-class boolean(valideer.Validator):
+class boolean(Validator):
     name = "bool"
     def validate(self, value, adapt=True):
         if value in (False, True):
@@ -26,4 +26,16 @@ class boolean(valideer.Validator):
         elif value.lower() in ('t', 'true', '1'):
             return True
         else:
-            raise valideer.ValidationError("Bool is not a valid format")
+            self.error("Bool is not a valid format")
+
+
+# class figure(Validator):
+#     name = "figure"
+#     tables = HomogeneousSequence(Pattern(r"(from|(inner|outer|full|right) join) .*"))
+#     seed = None # todod
+#     arguments = Mapping(Pattern(r"(\&\-)\w+(\[\])?", seed))
+#     validate = Object(required=dict(tables=tables,
+#                                     arguments=arguments,
+#                                     outline=Mapping("string", Type(dict))),
+#                       optional=dict(help="string"),
+#                       additional=False)

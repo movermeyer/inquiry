@@ -1,3 +1,4 @@
+import os
 from .figure import Figure
 from .navigator import Navigator
 
@@ -8,13 +9,12 @@ except ImportError:
         raise EnvironmentError("No adapting method found.")
 
 
-FIGURES = {}
-
 class Inquiry(object):
-    def __init__(self, debug=False):
+    def __init__(self, figures=None, debug=None):
         """Debug will sort the sql statement for testing accuracy
         """
-        self.debug = debug
+        self.debug = (os.getenv("DEBUG")=="TRUE" or os.getenv('CI')) if debug is None else debug
+        self.figures = dict([(name, Figure(name, json)) for name, json in figures.items()]) if figures else {}
         self.build()
 
     def adapt(self, value, *extra_data):
@@ -44,8 +44,7 @@ class Inquiry(object):
         return True
 
     def add_figure(self, name, json):
-        global FIGURES
-        FIGURES[name] = Figure(name, json)
+        self.figures[name] = Figure(name, json)
 
     def new(self, *args):
         """:args and :kwargs are passed through the figure
@@ -55,22 +54,14 @@ class Inquiry(object):
     def make(self, *args, **kwargs):
         return Navigator(self)(*args, **kwargs)
 
-    def clear(self):
-        global FIGURES
-        FIGURES = {}
-
     def get(self, index):
-        global FIGURES
-        if not FIGURES:
-            self.build()
-        
         index = index.lower()
-        if index in FIGURES:
-            return FIGURES.get(index)
-        elif (index+"s") in FIGURES:
-            return FIGURES.get(index+"s")
-        for key in FIGURES:
-            if index in FIGURES[key].alias or index+"s" in FIGURES[key].alias:
-                return FIGURES[key]
+        if index in self.figures:
+            return self.figures.get(index)
+        elif (index+"s") in self.figures:
+            return self.figures.get(index+"s")
+        for key in self.figures:
+            if index in self.figures[key].alias or index+"s" in self.figures[key].alias:
+                return self.figures[key]
 
         raise LookupError('No figure found for `'+index+'`')

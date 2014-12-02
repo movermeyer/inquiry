@@ -3,7 +3,6 @@ from time import time
 from json import dumps
 from decimal import Decimal
 from datetime import datetime
-from xml.dom.minidom import Document
 
 
 def json_defaults(obj):
@@ -55,47 +54,6 @@ class Results(object):
             result['meta']['query'] = self.pg()
 
         return dumps(result, default=json_defaults)
-    
-    def xml(self):
-        speed = time()
-        results = self.results
-        if results:
-            doc = Document()
-            # <figure></figure>
-            base = doc.createElement('figure')
-            doc.appendChild(base)
-            
-            # <figure><meta></meta></figure>
-            meta = doc.createElement('meta')
-            base.appendChild(meta)
-            for key, value in (("status", 200), ("rows", len(results)), ("title", self.title), ('time', self.period), ("speed", "%.fms" % ((time() - speed)*1000))):
-                # <figure><meta><:key>:value</:key></meta></figure>
-                _meta, meta_value = doc.createElement(key), doc.createTextNode(str(value))
-                meta.appendChild(_meta)
-                meta.appendChild(meta_value)
-
-            # <figure><rows></rows></figure>
-            rows = doc.createElement('rows')
-            base.appendChild(rows)
-            for row in results:
-                # <figure><rows><row></row></rows></figure>
-                _row = doc.createElement('row')
-                rows.appendChild(_row)
-                for key in row:
-                    k, v = doc.createElement(key), doc.createTextNode(str(row[key]) if row[key] is not None else '')
-                    _row.appendChild(k)
-                    k.appendChild(v)
-
-            return doc.toxml()
-
-    def csv(self):
-        results = self.results
-        if results:
-            keys = self.results[0].keys()
-            string = ",".join(keys)
-            for row in self.results:
-                string = "\n" + ",".join(map(lambda k: '"%s"'%str(row[k]), keys))
-            return string
 
     @valideer.accepts(into=valideer.Nullable(valideer.Pattern(r"^[a-zA-Z\_]{1,25}$")))
     def pg(self, into=None):

@@ -3,10 +3,10 @@ from setuptools import setup
 classifiers = ["Development Status :: 4 - Beta",
                "License :: OSI Approved :: Apache Software License"]
 
-install_requires = ["valideer==0.3", "timestring"]
+install_requires = ["valideer>=0.3", "timestring"]
 
 setup(name='inquiry',
-      version='0.0.1',
+      version='0.0.2',
       description="psql query generator",
       long_description="",
       classifiers=classifiers,

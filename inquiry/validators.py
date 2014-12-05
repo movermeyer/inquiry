@@ -18,15 +18,18 @@ class where(Pattern):
 
 class boolean(Validator):
     name = "bool"
+    true = ("y", "yes", "1", "t", "true", "on")
+    false = ("n", "no", "0", "f", "false", "off")
     def validate(self, value, adapt=True):
-        if value in (False, True):
+        if type(value) is bool:
             return value
-        elif value.lower() in ('f', 'false', '0'):
-            return False
-        elif value.lower() in ('t', 'true', '1'):
-            return True
+        _value = str(value).lower()
+        if _value in self.true:
+            return True if adapt else value
+        elif _value in self.false:
+            return False if adapt else value
         else:
-            self.error("Bool is not a valid format")
+            self.error("bool is not valid")
 
 
 # class figure(Validator):

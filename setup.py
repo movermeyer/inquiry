@@ -6,7 +6,7 @@ classifiers = ["Development Status :: 4 - Beta",
 install_requires = ["valideer>=0.3", "timestring"]
 
 setup(name='inquiry',
-      version='0.0.2',
+      version='0.0.3',
       description="psql query generator",
       long_description="",
       classifiers=classifiers,

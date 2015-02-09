@@ -514,7 +514,8 @@ class Garden(object):
         ops = {"text":('!', '~'),
                "numeric":('<', '<=', '>', '>=', '!'),
                "float8":('<', '<=', '>', '>=', '!'),
-               "int":('<', '<=', '>', '>=', '!')}.get(datatype, ('!'))
+               "timestamptz":('<','>','!'),
+               "int":('<', '<=', '>', '>=', '!')}.get(datatype, ('!',))
         for o in ops:
             if str(value).startswith(o):
                 return o, value[len(o):]

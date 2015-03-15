@@ -13,7 +13,7 @@ class Inquiry(object):
     def __init__(self, figures=None, debug=None):
         """Debug will sort the sql statement for testing accuracy
         """
-        self.debug = (os.getenv("DEBUG")=="TRUE" or os.getenv('CI')) if debug is None else debug
+        self.debug = ((str(os.getenv('DEBUG', 'FALSE')).upper()=='TRUE') or os.getenv('CI')) if debug is None else debug
         self.figures = dict([(name, Figure(name, json)) for name, json in figures.items()]) if figures else {}
         self.build()
 

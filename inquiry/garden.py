@@ -11,12 +11,12 @@ class Garden(object):
     the objective is to create a query from user arguments
     through generating seeds that will flower into the query.
     """
-    _seed_titles = ("inherit", "inherits", 
+    _seed_titles = ("inherit", "inherits",
                     "with", "with[]",
                     "select", "select[]",
                     "table", "table[]",
                     "tables", "tables[]",
-                    "where", "where[]", 
+                    "where", "where[]",
                     "arguments")
 
     COLUMN_RE = re.compile(r"^[a-zA-Z]{3,25}$")
@@ -102,7 +102,7 @@ class Garden(object):
         - Validate the arguments, cleaning and adapting (valideer wise)
         - Extract negatives "!" arguments
         """
-        # the valideer to parse the 
+        # the valideer to parse the
         # user arguemnts when watering
         parser = {}
 
@@ -304,7 +304,7 @@ class Garden(object):
 
                     # no seed found: invalid
                     if not found: raise valideer.ValidationError("Invalid value", key)
-            
+
             if type(value) in (list, tuple):
                 value = replace_with
                 validate = valideer.HomogeneousSequence(valideer.String())
@@ -323,7 +323,7 @@ class Garden(object):
             raise EnvironmentError("Missing validation method for "+key)
 
         return {key: value}, {pkey: validate}
-       
+
     def _harvest_query(self, operators, validated):
         # ------------------
         # Casting / Adapting
@@ -371,7 +371,7 @@ class Garden(object):
             # Formulate SELECT and WHERE
             # --------------------------
             if 'column' in seed and seed['id'] in operators:
-                # if "id" not in operators then it is is likely found 
+                # if "id" not in operators then it is is likely found
                 #   in the "WHERE" arguments as task only feature.
                 # operators add the query on its own
                 column, datatype = tuple(seed['column'].rsplit("::", 1))
@@ -384,13 +384,13 @@ class Garden(object):
                     # this column is produced when aggregated
                     # need to add that to the query
                     query.agg(seed['id'])
-                
+
                 if type(ops) is list:
                     # ----------
                     # ["!", "!"]
                     # ----------
                     if len(set(ops)) == 1:
-                        # multiple arguments provided 
+                        # multiple arguments provided
                         w = ("%%(%(id)s)s::%(type)s[] %(operator)s array[%(column)s]" if not is_array \
                              else "%(column)s %(operator)s %%(%(id)s)s::%(type)s[]") %\
                                   dict(column=column,
@@ -417,7 +417,7 @@ class Garden(object):
                             dict(operator={"~":"@@","!":"!="}.get(ops[1], ops[1]),
                                  id=seed['id'],
                                  type=datatype)
-               
+
                 # -----------
                 # "=" (array)
                 # -----------
@@ -493,7 +493,7 @@ class Garden(object):
             query._query = query._query.replace('%(updates)s', ", ".join(updates))
 
         return query(validated)
-    
+
     def _inherit(self, *paths):
         for path in paths:
             if path:

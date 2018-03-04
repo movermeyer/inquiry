@@ -1,4 +1,4 @@
-inquiry [![Build Status](https://secure.travis-ci.org/tasks/inquiry.png)](http://travis-ci.org/tasks/inquiry) [![Version](https://pypip.in/v/inquiry/badge.png)](https://github.com/tasks/inquiry) [![codecov.io](https://codecov.io/github/tasks/inquiry/coverage.png)](https://codecov.io/github/tasks/inquiry)
+inquiry [![Build Status](https://secure.travis-ci.org/tasks/inquiry.png)](http://travis-ci.org/tasks/inquiry) [![Version](https://img.shields.io/pypi/v/inquiry.svg)](https://github.com/tasks/inquiry) [![codecov.io](https://codecov.io/github/tasks/inquiry/coverage.png)](https://codecov.io/github/tasks/inquiry)
 -------
 
 `pip install inquiry`
